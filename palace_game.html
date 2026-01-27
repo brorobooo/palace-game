@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>深宫华章 - 终极视觉版</title>
+    <title>深宫华章 - 修复版</title>
     <style>
         :root { --palace-red: #8b1b1b; --gold: #c5a059; --paper: #f4f1de; --ink: #2c2c2c; --success-bg: #fffafa; }
         body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -22,9 +22,8 @@
         input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 70%; padding: 10px; font-size: 1.2rem; text-align: center; margin: 30px 0; outline: none; font-family: "STKaiti", serif; }
         #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:var(--paper); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; }
         
-        /* 结局样式区分 */
-        .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 30px; text-align: center; box-shadow: 0 0 20px rgba(197, 160, 89, 0.2); }
-        .dead-card { border: 4px solid #600; background: #1a0000; color: #ff4d4d; padding: 30px; text-align: center; }
+        .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 30px; text-align: center; }
+        .dead-card { border: 4px solid #600; background: #1a0000; color: #ff4d4d; padding: 30px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
     </style>
 </head>
 <body>
@@ -46,13 +45,15 @@
             <button class="choice-btn" style="padding: 15px 50px; font-size: 1.2rem;" onclick="generateIdentity()">求取签文</button>
         </div>
         <div id="page-identity" class="hidden">
-            <div class="message" style="text-align: center;">选秀呈报，资料如下：</div>
-            <div style="border: 2px solid var(--palace-red); padding: 20px; background: #fffafa; text-align: center; margin-bottom: 20px;">
-                <h2 id="display-rank" style="color: var(--palace-red); margin: 0;"></h2>
-                <div id="display-stats" style="margin-top: 15px; text-align: left; display: inline-block; line-height: 2;"></div>
+            <div id="identity-content">
+                <div class="message" style="text-align: center;">选秀呈报，资料如下：</div>
+                <div style="border: 2px solid var(--palace-red); padding: 20px; background: #fffafa; text-align: center; margin-bottom: 20px;">
+                    <h2 id="display-rank" style="color: var(--palace-red); margin: 0;"></h2>
+                    <div id="display-stats" style="margin-top: 15px; text-align: left; display: inline-block; line-height: 2;"></div>
+                </div>
+                <button class="choice-btn" style="width: 100%;" onclick="enterPalace()">领旨入宫</button>
+                <button class="choice-btn btn-danger" style="width: 100%; margin-top: 10px;" onclick="resistDecree()">抗旨不尊</button>
             </div>
-            <button class="choice-btn" style="width: 100%;" onclick="enterPalace()">领旨入宫</button>
-            <button class="choice-btn btn-danger" style="width: 100%; margin-top: 10px;" onclick="resistDecree()">抗旨不尊</button>
         </div>
         <div id="page-game" class="hidden">
             <div id="story-text" class="message"></div>
@@ -106,14 +107,15 @@
     }
 
     function generateIdentity() {
-        const name = document.getElementById('p-name').value;
-        if (!name) return alert("请赐名");
-        p.name = name;
+        const nameInput = document.getElementById('p-name').value;
+        if (!nameInput) return alert("请赐名");
+        p.name = nameInput;
         const ranks = ["宫女", "答应", "贵人"];
         p.rank = ranks[Math.floor(Math.random() * 3)]; 
         const base = { "宫女":[20,40], "答应":[35,55], "贵人":[50,70] }[p.rank];
         let initFavor = p.rank === "宫女" ? 0 : rnd(1, 10);
         p.stats = { beauty: rnd(base[0],base[1]), talent: rnd(base[0],base[1]), wit: rnd(base[0],base[1]), body: rnd(40,60), prestige: rnd(5,15), favor: initFavor };
+        
         document.getElementById('page-start').classList.add('hidden');
         document.getElementById('page-identity').classList.remove('hidden');
         document.getElementById('display-rank').innerText = `${p.name} · ${p.rank}`;
@@ -121,8 +123,28 @@
     }
 
     function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function enterPalace() { document.getElementById('page-identity').classList.add('hidden'); document.getElementById('page-game').classList.remove('hidden'); document.getElementById('menu-trigger').classList.remove('hidden'); document.getElementById('stat-panel').classList.add('active'); updateStatPanel(); showPlot(); }
+
+    function enterPalace() {
+        document.getElementById('page-identity').classList.add('hidden');
+        document.getElementById('page-game').classList.remove('hidden');
+        document.getElementById('menu-trigger').classList.remove('hidden');
+        document.getElementById('stat-panel').classList.add('active');
+        updateStatPanel();
+        showPlot();
+    }
+
+    function resistDecree() {
+        // 抗旨直接替换身份页内容为死亡结局
+        document.getElementById('identity-content').innerHTML = `
+            <div class="dead-card">
+                <h2 style="letter-spacing: 5px;">雷霆之怒</h2>
+                <div style="line-height:1.8; margin:20px 0;">大胆 ${p.name}！圣旨已下竟然抗旨不尊？<br>皇上龙颜大怒，下旨将你满门抄斩，诛九族！</div>
+                <button class="choice-btn" style="width:100%; background:#400; color:#fff; border:none;" onclick="location.reload()">叩首谢罪（重新开始）</button>
+            </div>`;
+    }
+
     function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
+
     function updateStatPanel() {
         document.getElementById('stat-content').innerHTML = `
             <div class="stat-row">位份：${p.rank}</div>
@@ -137,7 +159,6 @@
     }
 
     function showPlot() {
-        // --- 逻辑判断：宫女满五年结局 ---
         if (p.rank === "宫女" && p.year >= 6) {
             showEnding("出宫恩典", "入宫五载，你依旧只是个卑微的宫女。如今青春已逝，嬷嬷按例将你放出宫去。回到家后，父母为你寻了一户踏实人家，你从此洗尽铅华，过上了平淡的一生。");
             return;
@@ -168,21 +189,17 @@
                 }
                 
                 if(pass) {
-                    for(let k in c.stats) p.stats[k] += c.stats[k];
-                    
-                    // --- 万能正常结局触发器 ---
+                    for(let k in c.stats) p.stats[k] += (c.stats[k] || 0);
                     if (c.newRank === "结局") {
                         showEnding("尘埃落定", c.resOk);
                         return;
                     }
-
-                    if(c.newRank) p.rank = c.newRank;
+                    if(c.newRank && c.newRank !== "") p.rank = c.newRank;
                     p.quarter++; if(p.quarter>4){p.quarter=1; p.year++;}
                     updateStatPanel();
                     document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
                     area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">继续</button>`;
                 } else {
-                    // --- 死亡结局逻辑 ---
                     gameOver(c.resFail || "你未能通过考验，惨死宫中。");
                 }
             };
@@ -190,7 +207,6 @@
         });
     }
 
-    // 正常结局显示（白底金边）
     function showEnding(title, msg) {
         document.getElementById('page-game').innerHTML = `
             <div class="end-card">
@@ -202,7 +218,6 @@
             </div>`;
     }
 
-    // 死亡/抗旨结局显示（黑底红边）
     function gameOver(res) {
         document.getElementById('page-game').innerHTML = `
             <div class="dead-card">
@@ -213,10 +228,6 @@
                 <button class="choice-btn" style="width:100%; margin-top:20px; background:#400; color:#fff; border:none;" onclick="location.reload()">重新开始</button>
             </div>`;
         document.getElementById('menu-trigger').classList.add('hidden');
-    }
-
-    function resistDecree() {
-        gameOver(`大胆 ${p.name}！圣旨已下竟然抗旨不尊？皇上龙颜大怒，下旨将其满门抄斩，诛九族！`);
     }
 </script>
 </body>
