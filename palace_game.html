@@ -169,23 +169,40 @@
             if(!c.text) return;
             let btn = document.createElement('button'); btn.className = "choice-btn"; btn.style.width = "100%"; btn.innerText = c.text;
             btn.onclick = () => {
-                let pass = true;
-                if(c.checkAttr && c.checkAttr !== "无") {
-                    const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
-                    let key = attrKeyMap[c.checkAttr] || c.checkAttr;
-                    if(p.stats[key] < c.checkVal) pass = false;
-                }
-                if(pass) {
-                    for(let k in c.stats) p.stats[k] += c.stats[k];
-                    if(c.newRank) p.rank = c.newRank;
-                    p.quarter++; if(p.quarter>4){p.quarter=1; p.year++;}
-                    updateStatPanel();
-                    document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
-                    area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">继续</button>`;
-                } else {
-                    gameOver(c.resFail || "你未能通过考验，惨死宫中。");
-                }
-            };
+    let pass = true;
+    if(c.checkAttr && c.checkAttr !== "无") {
+        const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
+        let key = attrKeyMap[c.checkAttr] || c.checkAttr;
+        if(p.stats[key] < c.checkVal) pass = false;
+    }
+
+    if(pass) {
+        // --- 成功逻辑 ---
+        for(let k in c.stats) p.stats[k] += c.stats[k];
+        
+        // 特殊判断：如果新位份填的是“结局”，则显示成功结局页面
+        if(c.newRank === "结局") {
+            document.getElementById('page-game').innerHTML = `
+                <div class="message" style="background:#fff5ee; color:var(--ink); border: 2px solid #cd853f;">
+                    <h2 style="color:#8b4513; text-align:center;">✨ 归隐山林</h2>
+                    <p>${c.resOk}</p>
+                    <hr>
+                    <p style="text-align:center; font-style:italic;">你成功逃离了深宫红墙，从此隐姓埋名，虽无荣华富贵，却得一世自由。</p>
+                    <button class="choice-btn" style="width:100%" onclick="location.reload()">再入轮回</button>
+                </div>`;
+            return;
+        }
+
+        if(c.newRank) p.rank = c.newRank;
+        p.quarter++; if(p.quarter>4){p.quarter=1; p.year++;}
+        updateStatPanel();
+        document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
+        area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">继续</button>`;
+    } else {
+        // --- 失败逻辑：杖毙 ---
+        gameOver(c.resFail || "你未能通过考验，惨死宫中。");
+    }
+};
             area.appendChild(btn);
         });
     }
@@ -194,5 +211,6 @@
 </script>
 </body>
 </html>
+
 
 
