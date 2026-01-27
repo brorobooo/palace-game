@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>深宫华章 - 百花齐放</title>
+    <title>深宫华章 - 数值判定版</title>
     <style>
         :root { --palace-red: #8b1b1b; --gold: #c5a059; --paper: #f4f1de; --ink: #2c2c2c; }
         body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -25,10 +25,7 @@
 <body>
 
 <div id="game-container">
-    <div id="loading-overlay">
-        <div style="font-size: 1.5rem; color: var(--palace-red); letter-spacing: 5px;">正在开启卷宗...</div>
-        <div id="load-status" style="margin-top:10px; font-size:0.9rem; color:var(--gold);">连接云端中</div>
-    </div>
+    <div id="loading-overlay"><div style="font-size: 1.5rem; color: var(--palace-red); letter-spacing: 5px;">正在开启卷宗...</div><div id="load-status" style="margin-top:10px; font-size:0.9rem; color:var(--gold);">连接云端中</div></div>
     <header>深宫华章</header>
     <div id="stat-panel">
         <h2 style="text-align:center; letter-spacing: 5px; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">个人档籍</h2>
@@ -62,32 +59,41 @@
     const CSV_URL = 'https://raw.githubusercontent.com/brorobooo/palace-game/main/plot.csv';
     let p = { name: "", rank: "", year: 1, quarter: 1, stats: {} };
     let plotLibrary = [];
+    let usedPlotIds = new Set(); // 记录已演过的剧情ID
 
     window.onload = async function() {
-        const status = document.getElementById('load-status');
         try {
             const response = await fetch(CSV_URL);
             const buffer = await response.arrayBuffer();
             const text = new TextDecoder('utf-8').decode(buffer);
             parseCSV(text);
-            status.innerText = "卷宗加载成功";
-            setTimeout(() => document.getElementById('loading-overlay').classList.add('hidden'), 800);
-        } catch (err) { status.innerText = "加载失败，请检查链接"; }
+            document.getElementById('loading-overlay').classList.add('hidden');
+        } catch (err) { document.getElementById('load-status').innerText = "加载失败，请检查CSV"; }
     };
 
     function parseCSV(text) {
         const rows = text.split(/\r?\n/).filter(line => line.trim() !== "");
-        let startIndex = rows[0].includes("ID") ? 0 : 1; // 自动跳过A,B,C行
+        let startIndex = rows[0].includes("ID") ? 0 : 1;
         const dataRows = rows.slice(startIndex + 1); 
         plotLibrary = dataRows.map(row => {
             const cols = row.split(',');
-            if (cols.length < 26) return null; // 现在是26列
+            if (cols.length < 28) return null; // 增加了判定列，总共28列
             return {
-                rank: cols[1].trim(), year: parseInt(cols[2]), quarter: parseInt(cols[3]),
+                id: cols[0].trim(), rank: cols[1].trim(), year: parseInt(cols[2]),
                 title: cols[4], text: cols[5],
                 choices: [
-                    { text: cols[6], res: cols[7], stats: { beauty: +cols[8], talent: +cols[9], wit: +cols[10], body: +cols[11], prestige: +cols[12], favor: +cols[13] }, newRank: cols[14].trim(), isDead: parseInt(cols[15]) },
-                    { text: cols[16], res: cols[17], stats: { beauty: +cols[18], talent: +cols[19], wit: +cols[20], body: +cols[21], prestige: +cols[22], favor: +cols[23] }, newRank: cols[24].trim(), isDead: parseInt(cols[25]) }
+                    { 
+                        text: cols[6], checkAttr: cols[7].trim(), checkVal: parseInt(cols[8]),
+                        resOk: cols[9], resFail: cols[10],
+                        stats: { beauty: +cols[11], talent: +cols[12], wit: +cols[13], body: +cols[14], prestige: +cols[15], favor: +cols[16] },
+                        newRank: cols[17].trim(), isDead: 0 
+                    },
+                    { 
+                        text: cols[18], checkAttr: cols[19].trim(), checkVal: parseInt(cols[20]),
+                        resOk: cols[21], resFail: cols[22],
+                        stats: { beauty: +cols[23], talent: +cols[24], wit: +cols[25], body: +cols[26], prestige: +cols[27], favor: +cols[28] || 0 },
+                        newRank: cols[29] ? cols[29].trim() : "", isDead: 0
+                    }
                 ]
             };
         }).filter(i => i);
@@ -113,7 +119,7 @@
     function updateStatPanel() {
         document.getElementById('stat-content').innerHTML = `
             <div class="stat-row">位份：${p.rank}</div>
-            <div class="stat-row">年份：第${p.year}年季${p.quarter}</div>
+            <div class="stat-row">时间：第${p.year}年 季${p.quarter}</div>
             <div class="stat-row">圣宠：<span style="color:#ff4d4d">${p.stats.favor}</span></div>
             <div class="stat-row">声望：${p.stats.prestige}</div>
             <div class="stat-row">容貌：${p.stats.beauty}</div>
@@ -124,18 +130,44 @@
     }
 
     function showPlot() {
-        let s = plotLibrary.find(item => item.rank === p.rank && item.year === p.year && item.quarter === p.quarter);
-        if (!s) s = { title: "深宫独处", text: "这一季宫中无事。", choices: [{ text: "继续", res: "岁月静好。", stats: {}, isDead: 0 }] };
+        // 筛选逻辑：同位份、同年、且未演过
+        let candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year && !usedPlotIds.has(item.id));
+        
+        // 如果当前年抽完了，就重置该年的卡池（或进入默认剧情）
+        if (candidates.length === 0) {
+            usedPlotIds.clear(); // 这里可以选是清空还是显示“无事发生”
+            candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year);
+        }
+
+        let s = candidates[Math.floor(Math.random() * candidates.length)];
+        if (!s) s = { title: "深宫独处", text: "这一季宫中无事。", choices: [{ text: "继续", resOk: "岁月静好。", stats: {} }] };
+        else usedPlotIds.add(s.id);
+
         document.getElementById('story-text').innerHTML = `<strong>【${s.title}】</strong><br>${s.text}`;
         const area = document.getElementById('choices-area'); area.innerHTML = "";
+        
         s.choices.forEach(c => {
             if(!c.text) return;
             let btn = document.createElement('button'); btn.className = "choice-btn"; btn.style.width = "100%"; btn.innerText = c.text;
             btn.onclick = () => {
-                for(let k in c.stats) p.stats[k] += c.stats[k];
-                if(c.newRank && c.newRank !== "") p.rank = c.newRank;
-                if(c.isDead || p.stats.body <= 0) { gameOver(c.res); } 
-                else { p.quarter++; if(p.quarter>4){p.quarter=1; p.year++;} updateStatPanel(); document.getElementById('story-text').innerHTML = `<div class="message">${c.res}</div>`; area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">进入下一节</button>`; }
+                // 数值判定
+                let pass = true;
+                if(c.checkAttr && c.checkAttr !== "无") {
+                    const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
+                    let key = attrKeyMap[c.checkAttr] || c.checkAttr;
+                    if(p.stats[key] < c.checkVal) pass = false;
+                }
+
+                if(pass) {
+                    for(let k in c.stats) p.stats[k] += c.stats[k];
+                    if(c.newRank) p.rank = c.newRank;
+                    p.quarter++; if(p.quarter>4){p.quarter=1; p.year++;}
+                    updateStatPanel();
+                    document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
+                    area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">继续</button>`;
+                } else {
+                    gameOver(c.resFail || "你未能通过考验，惨死宫中。");
+                }
             };
             area.appendChild(btn);
         });
@@ -145,4 +177,3 @@
 </script>
 </body>
 </html>
-
