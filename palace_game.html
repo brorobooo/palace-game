@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>深宫华章 - 百花齐放</title>
+    <style>
+        :root {
+            --palace-red: #8b1b1b;
+            --gold: #c5a059;
+            --paper: #f4f1de;
+            --ink: #2c2c2c;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: #1a1a1a;
+            font-family: "STKaiti", "KaiTi", serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* 游戏容器：宣纸质感与双金边 */
+        #game-container {
+            width: 95%; max-width: 450px; height: 90vh;
+            background: var(--paper) url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            border: 8px solid var(--palace-red);
+            outline: 2px solid var(--gold); outline-offset: -5px;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+        }
+
+        header {
+            background: var(--palace-red); color: var(--gold);
+            padding: 15px 0; text-align: center;
+            font-size: 1.6rem; letter-spacing: 6px;
+            border-bottom: 4px double var(--gold);
+            z-index: 5;
+        }
+
+        #scene { flex-grow: 1; padding: 25px; display: flex; flex-direction: column; z-index: 4; overflow-y: auto; }
+
+        /* 侧边档案栏：点击灯笼滑出 */
+        #stat-panel {
+            position: absolute; right: -100%; top: 0; width: 75%; height: 100%;
+            background: rgba(139, 27, 27, 0.98); color: var(--gold);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 100; padding: 50px 25px; box-sizing: border-box;
+            border-left: 3px solid var(--gold); display: none;
+        }
+        #stat-panel.active { display: block; }
+        #stat-panel.open { right: 0; }
+
+        .stat-row { margin-bottom: 12px; border-bottom: 1px solid rgba(197, 160, 89, 0.3); padding: 5px 0; font-size: 1.1rem; }
+
+        /* 悬浮小灯笼 */
+        #menu-trigger {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 55px; height: 55px; background: var(--gold);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; font-size: 30px; border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 101;
+        }
+
+        /* 对话框与按钮 */
+        .message { background: rgba(255,255,255,0.6); padding: 20px; border: 1px solid var(--gold); line-height: 1.8; color: var(--ink); font-size: 1.1rem; margin-bottom: 25px; }
+        
+        .choice-btn {
+            background: white; color: var(--palace-red);
+            border: 1px solid var(--palace-red);
+            padding: 12px 15px; margin-bottom: 12px;
+            cursor: pointer; font-family: "STKaiti", serif;
+            font-size: 1rem; transition: 0.3s;
+            box-shadow: 2px 2px 0 var(--gold);
+        }
+        .choice-btn:hover { background: var(--palace-red); color: var(--gold); transform: translateX(3px); }
+
+        .hidden { display: none !important; }
+        input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 70%; padding: 10px; font-size: 1.2rem; text-align: center; margin: 30px 0; outline: none; font-family: "STKaiti", serif; }
+        
+        #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:var(--paper); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="loading-overlay">
+        <div style="font-size: 1.5rem; color: var(--palace-red); letter-spacing: 5px;">正在开启卷宗...</div>
+        <div id="load-status" style="margin-top:10px; font-size:0.9rem; color:var(--gold);">连接云端中</div>
+    </div>
+
+    <header>深宫华章</header>
+    
+    <div id="stat-panel">
+        <h2 style="text-align:center; letter-spacing: 5px; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">个人档籍</h2>
+        <div id="stat-content"></div>
+        <button class="choice-btn" style="width:100%; margin-top:30px;" onclick="toggleStats()">收回档籍</button>
+    </div>
+
+    <div id="menu-trigger" class="hidden" onclick="toggleStats()">🏮</div>
+
+    <div id="scene">
+        <div id="page-start" style="text-align: center; margin-top: 60px;">
+            <h1 style="color: var(--palace-red); letter-spacing: 12px;">百花齐放</h1>
+            <input type="text" id="p-name" placeholder="请输入芳名">
+            <br>
+            <button class="choice-btn" style="padding: 15px 50px; font-size: 1.2rem;" onclick="generateIdentity()">求取签文</button>
+        </div>
+
+        <div id="page-identity" class="hidden">
+            <div class="message" style="text-align: center;">选秀呈报，官女子资料如下：</div>
+            <div style="border: 2px solid var(--palace-red); padding: 20px; background: #fffafa; text-align: center; margin-bottom: 20px;">
+                <h2 id="display-rank" style="color: var(--palace-red); margin: 0;"></h2>
+                <div id="display-stats" style="margin-top: 15px; text-align: left; display: inline-block; line-height: 2;"></div>
+            </div>
+            <button class="choice-btn" style="width: 100%;" onclick="enterPalace()">领旨入宫</button>
+        </div>
+
+        <div id="page-game" class="hidden">
+            <div id="story-text" class="message"></div>
+            <div id="choices-area"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 【配置区】填入你的 GitHub Raw 地址
+    const CSV_URL = 'https://raw.githubusercontent.com/brorobooo/palace-game/refs/heads/main/plot.csv';
+
+    let p = { name: "", rank: "", year: 1, quarter: 1, stats: {} };
+    let plotLibrary = [];
+
+    window.onload = async function() {
+        const status = document.getElementById('load-status');
+        try {
+            const response = await fetch(CSV_URL);
+            const text = await response.text();
+            parseCSV(text);
+            status.innerText = "卷宗加载成功";
+            setTimeout(() => document.getElementById('loading-overlay').classList.add('hidden'), 800);
+        } catch (err) {
+            status.innerText = "加载失败，请检查链接";
+        }
+    };
+
+    function parseCSV(text) {
+        const rows = text.split(/\r?\n/).slice(1); 
+        plotLibrary = rows.map(row => {
+            const cols = row.split(',');
+            if (cols.length < 24) return null;
+            return {
+                rank: cols[1].trim(), year: parseInt(cols[2]), quarter: parseInt(cols[3]),
+                title: cols[4], text: cols[5],
+                choices: [
+                    { text: cols[6], res: cols[7], stats: { beauty: +cols[8], talent: +cols[9], wit: +cols[10], body: +cols[11], prestige: +cols[12] }, newRank: cols[13].trim(), isDead: parseInt(cols[14]) },
+                    { text: cols[15], res: cols[16], stats: { beauty: +cols[17], talent: +cols[18], wit: +cols[19], body: +cols[20], prestige: +cols[21] }, newRank: cols[22].trim(), isDead: parseInt(cols[23]) }
+                ]
+            };
+        }).filter(i => i);
+    }
+
+    function generateIdentity() {
+        const name = document.getElementById('p-name').value;
+        if (!name) return alert("请赐名");
+        p.name = name;
+        const ranks = ["宫女", "答应", "贵人", "贵妃", "皇后"];
+        p.rank = ranks[Math.floor(Math.random() * 3)]; 
+        // 初始属性根据位份随机
+        const base = { "宫女":[20,40], "答应":[35,55], "贵人":[50,70] }[p.rank];
+        p.stats = { beauty: rnd(base[0],base[1]), talent: rnd(base[0],base[1]), wit: rnd(base[0],base[1]), body: rnd(35,55), prestige: rnd(5,20) };
+        
+        document.getElementById('page-start').classList.add('hidden');
+        document.getElementById('page-identity').classList.remove('hidden');
+        document.getElementById('display-rank').innerText = `${p.name} · ${p.rank}`;
+        document.getElementById('display-stats').innerHTML = `容貌：${p.stats.beauty} &nbsp; 才情：${p.stats.talent}<br>心机：${p.stats.wit} &nbsp; 体质：${p.stats.body}<br>声望：${p.stats.prestige}`;
+    }
+
+    function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function enterPalace() {
+        document.getElementById('page-identity').classList.add('hidden');
+        document.getElementById('page-game').classList.remove('hidden');
+        document.getElementById('menu-trigger').classList.remove('hidden');
+        document.getElementById('stat-panel').classList.add('active');
+        updateStatPanel();
+        showPlot();
+    }
+
+    function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
+
+    function updateStatPanel() {
+        document.getElementById('stat-content').innerHTML = `
+            <div class="stat-row">位份：${p.rank}</div>
+            <div class="stat-row">年份：第${p.year}年季${p.quarter}</div>
+            <div class="stat-row">容貌：${p.stats.beauty}</div>
+            <div class="stat-row">才情：${p.stats.talent}</div>
+            <div class="stat-row">心机：${p.stats.wit}</div>
+            <div class="stat-row">体质：${p.stats.body}</div>
+            <div class="stat-row">声望：${p.stats.prestige}</div>
+        `;
+    }
+
+    function showPlot() {
+        let s = plotLibrary.find(item => item.rank === p.rank && item.year === p.year && item.quarter === p.quarter);
+        if (!s) s = { title: "深宫独处", text: "这一季宫中无事。", choices: [{ text: "继续", res: "岁月静好。", stats: {}, isDead: 0 }] };
+        
+        document.getElementById('story-text').innerHTML = `<strong>【${s.title}】</strong><br>${s.text}`;
+        const area = document.getElementById('choices-area');
+        area.innerHTML = "";
+        s.choices.forEach(c => {
+            if(!c.text) return;
+            let btn = document.createElement('button');
+            btn.className = "choice-btn"; btn.style.width = "100%"; btn.innerText = c.text;
+            btn.onclick = () => {
+                for(let k in c.stats) p.stats[k] += c.stats[k];
+                if(c.newRank) p.rank = c.newRank;
+                if(c.isDead || p.stats.body <= 0) {
+                    gameOver(c.res);
+                } else {
+                    p.quarter++; if(p.quarter>4){p.quarter=1; p.year++;}
+                    updateStatPanel();
+                    document.getElementById('story-text').innerHTML = `<div class="message">${c.res}</div>`;
+                    area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">进入下一节</button>`;
+                }
+            };
+            area.appendChild(btn);
+        });
+    }
+
+    function gameOver(res) {
+        document.getElementById('page-game').innerHTML = `<div class="message" style="background:#222; color:#fff; border-color:red;"><h2>魂断深宫</h2><p>${res}</p><button class="choice-btn" style="width:100%" onclick="location.reload()">重新开始</button></div>`;
+        document.getElementById('menu-trigger').classList.add('hidden');
+    }
+</script>
+</body>
+</html>
