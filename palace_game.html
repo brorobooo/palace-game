@@ -244,7 +244,7 @@
         return { title: result.title, text: extraMsg + result.text };
     }
 
-    function showPlot() {
+function showPlot() {
         if (p.pregTimer >= 0) { p.pregTimer++; if (p.pregTimer >= 3) giveBirth(); }
         if (emperor.currentYear >= emperor.deathYear) { 
             let end = getDeathEnding();
@@ -266,13 +266,40 @@
                 let pass = true;
                 const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
                 if(c.checkAttr && c.checkAttr !== "无" && p.stats[attrKeyMap[c.checkAttr] || c.checkAttr] < c.checkVal) pass = false;
+                
                 if(pass) {
+                    // 1. 基础属性加减
                     for(let k in c.stats) if(p.stats[k] !== undefined) p.stats[k] += (c.stats[k] || 0);
+                    
+                    // 2. 侍寝/怀孕判定
                     if (s.isBed === "1") handlePregnancy();
-                    if(c.newRank && c.newRank !== "" && c.newRank !== "结局") p.rank = c.newRank;
-                    p.quarter++; if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
+
+                    // --- 核心修改：圣宠晋升判定 ---
+                    let promotionMsg = "";
+                    if(c.newRank && c.newRank !== "" && c.newRank !== "无" && c.newRank !== "结局") {
+                        // 定义门槛
+                        const rankReq = { "答应": 30, "贵人": 120, "妃": 400, "贵妃": 1000, "皇后": 2500 };
+                        let need = rankReq[c.newRank] || 0;
+
+                        if (p.stats.favor >= need) {
+                            p.rank = c.newRank;
+                            p.year = 1;    // 晋升后重置年份
+                            p.quarter = 1; // 晋升后重置季度
+                            promotionMsg = `<br><b style="color:#8b1b1b">【晋升】圣宠达标，你已被册封为${c.newRank}！</b>`;
+                        } else {
+                            promotionMsg = `<br><i style="color:#777">（虽立功劳，但圣宠不足${p.stats.favor}/${need}，暂未封位）</i>`;
+                        }
+                    }
+                    // --- 修改结束 ---
+
+                    // 3. 推进时间（如果没有晋升重置，则正常推进）
+                    if (promotionMsg.indexOf("【晋升】") === -1) {
+                        p.quarter++; 
+                        if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
+                    }
+
                     updateStatPanel();
-                    document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
+                    document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}${promotionMsg}</div>`;
                     area.innerHTML = `<button class="choice-btn" onclick="showPlot()">继续</button>`;
                 } else {
                     gameOver(c.resFail || "你未能通过考验，惨死宫中。");
@@ -296,5 +323,6 @@
 </script>
 </body>
 </html>
+
 
 
