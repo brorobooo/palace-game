@@ -393,7 +393,7 @@ input[type="text"] {
         document.getElementById('display-stats-preview').innerHTML = `容貌：${p.stats.beauty} &nbsp; 才情：${p.stats.talent}<br>心机：${p.stats.wit} &nbsp; 体质：${p.stats.body}<br>声望：${p.stats.prestige} &nbsp; 圣宠：${p.stats.favor}`;
     }
 
-    async // 修改 2: 入宫函数（确保灯笼现身）
+    // 修改 2: 入宫函数（确保灯笼现身）
 async function enterPalace() {
     await loadRankStory(p.rank);
     document.getElementById('page-identity').classList.add('hidden');
@@ -597,6 +597,7 @@ async function loadGame() {
 </script>
 </body>
 </html>
+
 
 
 
