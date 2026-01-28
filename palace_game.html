@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>深宫华章：凤权弈命❥</title>
+    <title>深宫华章：凤权弈命❥/title>
     <style>
         :root { --palace-red: #8b1b1b; --gold: #c5a059; --paper: #f4f1de; --ink: #2c2c2c; --success-bg: #fffafa; }
         body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -237,8 +237,7 @@
     function handlePregnancy() {
         if (p.pregTimer >= 0) return;
         let chance = p.stats.body > 70 ? 0.5 : 0.2;
-        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】昨夜蒙君垂怜伴驾良宵，今诊脉得喜，身怀龙裔，幸承天恩！"); 
-                                    else { alert("御驾榻前承欢，良宵苦短，君心眷怜，次日便传旨赏你诸多珍品，荣宠加身。"); }
+        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】昨夜蒙君垂怜伴驾良宵，今诊脉得喜，身怀龙裔，幸承天恩！"); }
     }
         updateStatPanel();
     }
@@ -345,5 +344,6 @@
 </script>
 </body>
 </html>
+
 
 
