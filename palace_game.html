@@ -187,7 +187,7 @@
         emperor.deathYear = emperor.currentYear + rnd(15, 25); 
         const ranks = ["宫女", "答应", "贵人"];
         p.rank = ranks[Math.floor(Math.random() * 3)]; 
-        const base = { "宫女":[20,40], "答应":[35,55], "贵人":[50,70] }[p.rank];
+        const base = { "宫女":[40,60], "答应":[60,80], "贵人":[75,95] }[p.rank];
         p.stats = { beauty: rnd(base[0],base[1]), talent: rnd(base[0],base[1]), wit: rnd(base[0],base[1]), body: rnd(40,60), prestige: rnd(5,15), favor: p.rank === "宫女" ? 0 : rnd(1, 10) };
         
         document.getElementById('page-start').classList.add('hidden');
@@ -343,6 +343,7 @@
 </script>
 </body>
 </html>
+
 
 
 
