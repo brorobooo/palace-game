@@ -210,7 +210,7 @@
     function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
 
     function updateStatPanel() {
-        let status = p.pregTimer >= 0 ? "<span style='color:#ffb700'>怀有龙裔</span>" : "平常";
+        let status = p.pregTimer >= 0 ? "<span style='color:#ffb700'>怀有龙嗣</span>" : "平常";
         document.getElementById('stat-content').innerHTML = `
             <div class="stat-group">
                 <h4>宫廷背景</h4>
@@ -237,7 +237,9 @@
     function handlePregnancy() {
         if (p.pregTimer >= 0) return;
         let chance = p.stats.body > 70 ? 0.5 : 0.2;
-        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】龙脉有续，你已怀有龙裔！"); }
+        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】昨夜蒙君垂怜伴驾良宵，今诊脉得喜，身怀龙裔，幸承天恩！"); 
+                                    else { alert("御驾榻前承欢，良宵苦短，君心眷怜，次日便传旨赏你诸多珍品，荣宠加身。"); }
+    }
         updateStatPanel();
     }
 
@@ -343,3 +345,4 @@
 </script>
 </body>
 </html>
+
