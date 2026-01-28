@@ -232,7 +232,6 @@ input[type="text"] {
 </div>
 
     <div id="menu-trigger" class="hidden" onclick="toggleStats()">🏮</div>
-    
     <div id="scene">
      <div id="page-start">
     <h1>深宫词阙</h1>
@@ -394,19 +393,28 @@ input[type="text"] {
         document.getElementById('display-stats-preview').innerHTML = `容貌：${p.stats.beauty} &nbsp; 才情：${p.stats.talent}<br>心机：${p.stats.wit} &nbsp; 体质：${p.stats.body}<br>声望：${p.stats.prestige} &nbsp; 圣宠：${p.stats.favor}`;
     }
 
-    async function enterPalace() {
-        await loadRankStory(p.rank);
-        document.getElementById('page-identity').classList.add('hidden');
-        document.getElementById('page-game').classList.remove('hidden');
-        document.getElementById('menu-trigger').classList.remove('hidden');
-        document.getElementById('stat-panel').classList.add('active');
-        updateStatPanel();
-        showPlot();
-    }
+    async // 修改 2: 入宫函数（确保灯笼现身）
+async function enterPalace() {
+    await loadRankStory(p.rank);
+    document.getElementById('page-identity').classList.add('hidden');
+    document.getElementById('page-game').classList.remove('hidden');
+    
+    // 显示小灯笼入口
+    document.getElementById('menu-trigger').classList.remove('hidden');
+    
+    // 切换 BGM
+    if (typeof switchBGM === "function") switchBGM('game'); 
+
+    updateStatPanel();
+    showPlot();
+}
+
+
 
     // 简单的切换函数
+// 修改 1: 卷轴开关
 function toggleStats() {
-    playClick(); // 播放你想要的点击音效
+    if (typeof playClick === "function") playClick(); // 播放音效
     const panel = document.getElementById('stat-panel');
     panel.classList.toggle('open');
 }
@@ -447,9 +455,11 @@ function saveGame() {
     alert("【系统】进度已封存于卷轴，可随时回溯。");
 }
 
+    // 修改 3: 存档读档后也要显示灯笼
 // --- 读档功能 ---
 async function loadGame() {
     const savedRaw = localStorage.getItem('palace_game_save');
+    document.getElementById('menu-trigger').classList.remove('hidden'); 
     if (!savedRaw) {
         alert("【提示】尚无存档记录，请先开启一段人生。");
         return;
@@ -587,6 +597,7 @@ async function loadGame() {
 </script>
 </body>
 </html>
+
 
 
 
