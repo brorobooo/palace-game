@@ -3,73 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>深宫华章 - 盛世余晖版❥(^_-)</title>
+    <title>深宫华章 - 适配版</title>
     <style>
         :root { --palace-red: #8b1b1b; --gold: #c5a059; --paper: #f4f1de; --ink: #2c2c2c; --success-bg: #fffafa; }
-        body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-y: auto; }
-        #game-container { width: 95%; max-width: 500px; height: auto; min-height: 85vh; max-height: 95vh; background: var(--paper) url('https://www.transparenttextures.com/patterns/paper-fibers.png'); border: 6px solid var(--palace-red); outline: 2px solid var(--gold); outline-offset: -4px; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.7); margin: 20px 0; }
-        header { background: var(--palace-red); color: var(--gold); padding: 12px 0; text-align: center; font-size: 1.4rem; letter-spacing: 5px; border-bottom: 4px double var(--gold); z-index: 5; flex-shrink: 0; }
-        #scene { flex-grow: 1; padding: 20px 20px 40px 20px; display: flex; flex-direction: column; z-index: 4; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        #stat-panel { position: absolute; right: -100%; top: 0; width: 85%; height: 100%; background: rgba(139, 27, 27, 0.98); color: var(--gold); transition: right 0.4s ease; z-index: 100; padding: 40px 20px; box-sizing: border-box; border-left: 3px solid var(--gold); }
+        body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; height: 100vh; width: 100vw; overflow: hidden; }
+        
+        #game-container { 
+            width: 100%; height: 100%; max-width: 600px; margin: 0 auto; 
+            background: var(--paper) url('https://www.transparenttextures.com/patterns/paper-fibers.png'); 
+            border: 4px solid var(--palace-red); outline: 2px solid var(--gold); outline-offset: -4px; 
+            position: relative; display: flex; flex-direction: column; box-sizing: border-box; 
+        }
+
+        header { background: var(--palace-red); color: var(--gold); padding: 15px 0; text-align: center; font-size: 1.4rem; letter-spacing: 5px; border-bottom: 4px double var(--gold); flex-shrink: 0; }
+        #scene { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        
+        #stat-panel { position: absolute; right: -100%; top: 0; width: 100%; max-width: 400px; height: 100%; background: rgba(139, 27, 27, 0.98); color: var(--gold); transition: right 0.4s ease; z-index: 100; padding: 40px 20px; box-sizing: border-box; border-left: 3px solid var(--gold); }
         #stat-panel.open { right: 0; }
-        .stat-row { margin-bottom: 10px; border-bottom: 1px solid rgba(197, 160, 89, 0.3); padding: 5px 0; font-size: 1rem; display: flex; justify-content: space-between; }
-        #menu-trigger { position: absolute; bottom: 15px; right: 15px; width: 50px; height: 50px; background: var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 24px; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 101; }
+
         .message { background: rgba(255,255,255,0.6); padding: 20px; border: 1px solid var(--gold); line-height: 1.7; color: var(--ink); font-size: 1.1rem; margin-bottom: 20px; }
-        .choice-btn { background: white; color: var(--palace-red); border: 1px solid var(--palace-red); padding: 12px; margin-bottom: 10px; cursor: pointer; font-family: "STKaiti", serif; font-size: 1rem; transition: 0.2s; box-shadow: 2px 2px 0 var(--gold); width: 100%; box-sizing: border-box; }
-        .choice-btn:active { transform: scale(0.98); background: #eee; }
+        .choice-btn { background: white; color: var(--palace-red); border: 1px solid var(--palace-red); padding: 15px; margin-bottom: 12px; cursor: pointer; font-family: "STKaiti", serif; font-size: 1.1rem; transition: 0.2s; box-shadow: 2px 2px 0 var(--gold); width: 100%; box-sizing: border-box; }
+        .choice-btn:active { background: #f0f0f0; }
+        
+        .btn-death { color: #fff; background: #600; border-color: #000; box-shadow: 2px 2px 0 #300; }
+
+        #page-start { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 80%; padding: 10px; font-size: 1.3rem; text-align: center; margin: 30px 0; outline: none; font-family: "STKaiti", serif; }
         .hidden { display: none !important; }
-        input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 70%; padding: 10px; font-size: 1.2rem; text-align: center; margin: 20px 0; outline: none; font-family: "STKaiti", serif; }
-        .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 25px; text-align: center; }
-        .dead-card { border: 4px solid #600; background: #1a0000; color: #ff4d4d; padding: 25px; text-align: center; min-height: 50%; display: flex; flex-direction: column; justify-content: center; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <div id="loading-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; background:var(--paper); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-        <div id="load-status" style="font-size: 1.2rem; color: var(--palace-red);">正在整理卷宗...</div>
+        <div id="load-status" style="font-size: 1.2rem; color: var(--palace-red);">正在同步云端档案...</div>
     </div>
+    
     <header>深宫华章</header>
+    
     <div id="stat-panel">
-        <h2 style="text-align:center; letter-spacing: 5px; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">个人档籍</h2>
+        <h2 style="text-align:center;">个人档籍</h2>
         <div id="stat-content"></div>
-        <button class="choice-btn" style="margin-top:30px;" onclick="toggleStats()">收回档籍</button>
+        <button class="choice-btn" onclick="toggleStats()">收回档籍</button>
     </div>
-    <div id="menu-trigger" class="hidden" onclick="toggleStats()">🏮</div>
+
     <div id="scene">
-        <div id="page-start" style="text-align: center; margin-top: 40px;">
+        <div id="page-start">
             <h1 style="color: var(--palace-red); letter-spacing: 10px;">百花齐放</h1>
             <input type="text" id="p-name" placeholder="请输入芳名">
-            <br>
-            <button class="choice-btn" style="width: 200px; font-size: 1.2rem;" onclick="generateIdentity()">求取签文</button>
+            <button class="choice-btn" style="width: 200px;" onclick="generateIdentity()">求取签文</button>
         </div>
+
         <div id="page-identity" class="hidden">
-            <div id="identity-content">
-                <div class="message" style="text-align: center;">选秀呈报，资料如下：</div>
-                <div style="border: 2px solid var(--palace-red); padding: 15px; background: #fffafa; text-align: center; margin-bottom: 15px;">
-                    <h2 id="display-rank" style="color: var(--palace-red); margin: 0; font-size: 1.4rem;"></h2>
-                    <div id="display-stats" style="margin-top: 10px; text-align: left; display: inline-block; line-height: 1.8; font-size: 0.95rem;"></div>
-                </div>
-                <button class="choice-btn" onclick="enterPalace()">领旨入宫</button>
+            <div class="message" style="text-align: center;">选秀呈报，资料如下：</div>
+            <div style="border: 2px solid var(--palace-red); padding: 15px; background: #fffafa; text-align: center; margin-bottom: 20px;">
+                <h2 id="display-rank" style="color: var(--palace-red); margin: 0;"></h2>
+                <div id="display-stats" style="margin-top: 10px; text-align: left; display: inline-block; line-height: 1.8;"></div>
             </div>
+            <button class="choice-btn" onclick="enterPalace()">领旨入宫</button>
+            <button class="choice-btn btn-death" onclick="rejectOrder()">抗旨不尊</button>
         </div>
+
         <div id="page-game" class="hidden">
             <div id="story-text" class="message"></div>
             <div id="choices-area"></div>
+            <div onclick="toggleStats()" style="text-align:center; color:var(--palace-red); cursor:pointer; margin-top:10px;">[ 查看档籍 ]</div>
         </div>
     </div>
 </div>
 
 <script>
+    // 修正后的 CSV 地址
     const CSV_URL = 'https://raw.githubusercontent.com/brorobooo/palace-game/main/plot.csv';
-    const DYNASTIES = ["崇盛", "泰安", "景和", "元禧", "永睦", "德润", "靖平", "嘉福", "睿宁", "熙德"];
     
-    let p = { 
-        name: "", rank: "", dynasty: "", startYear: 1, gameYear: 1, quarter: 1, 
-        emperorDeathYear: 30, 
-        stats: { beauty: 0, talent: 0, wit: 0, body: 0, prestige: 0, favor: 0 } 
-    };
-    
+    let p = { name: "", rank: "", dynasty: "", gameYear: 1, quarter: 1, stats: {} };
     let plotLibrary = [];
 
     window.onload = async function() {
@@ -78,155 +85,114 @@
             const text = await response.text();
             parseCSV(text);
             document.getElementById('loading-overlay').classList.add('hidden');
-        } catch (err) { document.getElementById('load-status').innerText = "加载失败，请检查网络"; }
+        } catch (err) { 
+            document.getElementById('load-status').innerText = "加载档案失败，请检查网络或路径"; 
+        }
     };
 
     function parseCSV(text) {
         const rows = text.split(/\r?\n/).filter(line => line.trim() !== "");
-        const dataRows = rows.slice(1); 
-        plotLibrary = dataRows.map(row => {
+        plotLibrary = rows.slice(1).map(row => {
             const c = row.split(',');
-            if (c.length < 31) return null; 
+            if (c.length < 10) return null;
             return {
                 id: c[0], rank: c[1].trim(), title: c[4], text: c[5],
                 choices: [
-                    {
-                        txt: c[6], attr: c[7], val: parseInt(c[8]), okMsg: c[9], failMsg: c[10],
-                        up: { beauty: +c[11], talent: +c[12], wit: +c[13], body: +c[14], prestige: +c[15], favor: +c[16] },
-                        jump: c[17].trim()
-                    },
-                    {
-                        txt: c[18], attr: c[19], val: parseInt(c[20]), okMsg: c[21], failMsg: c[22],
-                        up: { beauty: +c[23], talent: +c[24], wit: +c[25], body: +c[26], prestige: +c[27], favor: +c[28] },
-                        jump: c[29].trim()
-                    }
+                    { txt: c[6], attr: c[7], val: parseInt(c[8]), okMsg: c[9], up: { favor: +c[16], prestige: +c[15] }, jump: c[17]?.trim() },
+                    { txt: c[18], attr: c[19], val: parseInt(c[20]), okMsg: c[21], up: { favor: +c[28], prestige: +c[27] }, jump: c[29]?.trim() }
                 ]
             };
         }).filter(i => i);
     }
 
-    function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
     function generateIdentity() {
-        const nameInput = document.getElementById('p-name').value;
-        if (!nameInput) return alert("请赐名");
-        p.name = nameInput;
-        p.dynasty = DYNASTIES[rnd(0, DYNASTIES.length - 1)];
-        p.startYear = rnd(1, 15);
-        p.emperorDeathYear = p.startYear + rnd(10, 20); 
-        
+        p.name = document.getElementById('p-name').value || "无名氏";
         const ranks = ["宫女", "答应", "贵人"];
-        p.rank = ranks[rnd(0, 2)];
+        p.rank = ranks[Math.floor(Math.random() * ranks.length)];
         
-        // 宫女初始属性及圣宠判定
-        if(p.rank === "宫女") {
-            p.stats = { beauty: rnd(30, 50), talent: rnd(30, 50), wit: rnd(30, 50), body: rnd(60, 80), prestige: rnd(0, 5), favor: 0 };
-        } else {
-            p.stats = { beauty: rnd(40, 70), talent: rnd(40, 70), wit: rnd(40, 70), body: rnd(50, 80), prestige: rnd(10, 20), favor: rnd(0, 10) };
-        }
+        // 初始属性初始化
+        p.stats = { beauty: 40, talent: 40, wit: 40, body: 70, prestige: 10, favor: (p.rank === "宫女" ? 0 : 10) };
         
         document.getElementById('page-start').classList.add('hidden');
         document.getElementById('page-identity').classList.remove('hidden');
         document.getElementById('display-rank').innerText = `${p.name} · ${p.rank}`;
-        document.getElementById('display-stats').innerHTML = `
-            年号：${p.dynasty}${p.startYear}年<br>
-            容貌：${p.stats.beauty} &nbsp; 才情：${p.stats.talent}<br>
-            心机：${p.stats.wit} &nbsp; 体质：${p.stats.body}
-        `;
+        document.getElementById('display-stats').innerHTML = `初始位份：${p.rank}<br>初始圣宠：${p.stats.favor}`;
+    }
+
+    function rejectOrder() {
+        document.getElementById('page-identity').innerHTML = `
+            <div style="background:#000; color:red; padding:40px; text-align:center; height:100%;">
+                <h1>大逆不道</h1>
+                <p>天子之命，岂容尔等拒绝？</p>
+                <p>圣上震怒，下旨：将${p.name}九族尽数捉拿，午门斩首，以此谢罪！</p>
+                <button class="choice-btn" style="margin-top:50px" onclick="location.reload()">重新投胎</button>
+            </div>`;
     }
 
     function enterPalace() {
         document.getElementById('page-identity').classList.add('hidden');
         document.getElementById('page-game').classList.remove('hidden');
-        document.getElementById('menu-trigger').classList.remove('hidden');
-        updateStatPanel();
         showPlot();
     }
 
-    function updateStatPanel() {
-        let curY = p.startYear + p.gameYear - 1;
-        document.getElementById('stat-content').innerHTML = `
-            <div class="stat-row"><span>位份：</span><span>${p.rank}</span></div>
-            <div class="stat-row"><span>时间：</span><span>${p.dynasty}${curY}载 (${p.quarter}季)</span></div>
-            <div class="stat-row"><span>容貌：</span><span>${p.stats.beauty}</span></div>
-            <div class="stat-row"><span>才情：</span><span>${p.stats.talent}</span></div>
-            <div class="stat-row"><span>心机：</span><span>${p.stats.wit}</span></div>
-            <div class="stat-row"><span>体质：</span><span>${p.stats.body}</span></div>
-            <div class="stat-row"><span>圣宠：</span><span>${p.stats.favor}</span></div>
-            <div class="stat-row"><span>声望：</span><span>${p.stats.prestige}</span></div>
-        `;
-    }
-
     function showPlot() {
-        let curY = p.startYear + p.gameYear - 1;
-
-        // 判定宫女五年未晋升结局
+        // 宫女五年强制结局逻辑
         if (p.rank === "宫女" && p.gameYear > 5) {
-            showEnd("遣散出宫", "五年期满，你终究只是一名平凡宫女。按律遣散出宫后，父母为你寻了一户老实人家，从此相夫教子，平淡一生。");
+            document.getElementById('page-game').innerHTML = `
+                <div class="message" style="text-align:center;">
+                    <h2>出宫结局：相夫教子</h2>
+                    <p>五年光阴弹指一挥间。由于一直未能获得圣眷晋升，你年满被遣返原籍。</p>
+                    <p>家中父母为你寻得一门普通亲事。你从此洗尽铅华，相夫教子，平凡一生。</p>
+                    <button class="choice-btn" onclick="location.reload()">再入轮回</button>
+                </div>`;
             return;
         }
 
-        if (curY >= p.emperorDeathYear) { handleDeath(); return; }
-
+        // 识别 CSV 中的内容（关键：匹配 p.rank）
         let list = plotLibrary.filter(i => i.rank === p.rank);
-        let s = list[rnd(0, list.length - 1)] || { title: "深宫岁月", text: "这一季宫中平和。", choices: [{txt: "继续", okMsg: "时光流逝。", up: {}}] };
+        if (list.length === 0) {
+            document.getElementById('story-text').innerText = `（未在 CSV 中找到位份为 [${p.rank}] 的剧情，请检查表格内容）`;
+            return;
+        }
 
+        let s = list[Math.floor(Math.random() * list.length)];
         document.getElementById('story-text').innerHTML = `<strong>【${s.title}】</strong><br>${s.text}`;
-        const area = document.getElementById('choices-area'); area.innerHTML = "";
-
+        
+        const area = document.getElementById('choices-area');
+        area.innerHTML = "";
         s.choices.forEach(c => {
             if (!c.txt) return;
-            let btn = document.createElement('button'); btn.className = "choice-btn"; btn.innerText = c.txt;
+            let btn = document.createElement('button');
+            btn.className = "choice-btn";
+            btn.innerText = c.txt;
             btn.onclick = () => {
-                const attrMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
-                let key = attrMap[c.attr];
-                if (key && p.stats[key] < c.val) {
-                    gameOver(c.failMsg || "你终究棋差一招。"); return;
-                }
-                
-                for (let k in c.up) p.stats[k] += c.up[k];
-                
+                // 简单的成功判定逻辑
+                p.stats.favor += (c.up.favor || 0);
                 if (c.jump && c.jump !== "无") p.rank = c.jump;
-                p.quarter++; if (p.quarter > 4) { p.quarter = 1; p.gameYear++; }
-                updateStatPanel();
-                document.getElementById('story-text').innerHTML = `<div class="message">${c.okMsg}</div>`;
+                
+                p.quarter++;
+                if (p.quarter > 4) { p.quarter = 1; p.gameYear++; }
+                
+                document.getElementById('story-text').innerText = c.okMsg;
                 area.innerHTML = `<button class="choice-btn" onclick="showPlot()">继续</button>`;
             };
             area.appendChild(btn);
         });
     }
 
-    function handleDeath() {
-        let title = "大行皇帝驾崩", msg = "";
-        let r = p.rank;
-
-        if (r === "皇后") {
-            title = "母后皇太后"; msg = "新帝登基，尊你为母后皇太后。你稳居慈宁宫，主持后宫事务，安享无上尊荣。";
-        } else if (r === "贵妃") {
-            title = "安享尊荣"; msg = "新帝感念你的身份，尊你为皇太妃。你在宫中安享荣华，无人敢轻易冒犯。";
-        } else if (r.includes("妃")) {
-            title = "德高望重"; msg = "新帝尊你为皇太妃，让你在宫中颐养天年。虽失去了往日权势，倒也安稳。";
-        } else if (r === "贵人") {
-            title = "佛堂清修"; msg = "你请旨前往皇家寺院带发修行。每日诵经礼佛，远离宫廷纷争，清心寡欲。";
-        } else { // 答应或宫女
-            title = "守陵终老"; msg = "作为低位嫔妃，你被安排前往皇家陵寝守陵。青灯古佛，此生与繁华隔绝。";
+    function toggleStats() {
+        const panel = document.getElementById('stat-panel');
+        if (!panel.classList.contains('open')) {
+            document.getElementById('stat-content').innerHTML = `
+                <p>姓名：${p.name}</p>
+                <p>位份：${p.rank}</p>
+                <p>入宫第 ${p.gameYear} 年</p>
+                <p>圣宠：${p.stats.favor}</p>
+                <p>声望：${p.stats.prestige}</p>
+            `;
         }
-
-        showEnd(title, msg);
+        panel.classList.toggle('open');
     }
-
-    function showEnd(title, msg) {
-        document.getElementById('page-game').innerHTML = `
-            <div class="end-card"><h2>${title}</h2><p>${msg}</p><button class="choice-btn" onclick="location.reload()">再入轮回</button></div>`;
-    }
-
-    function gameOver(m) {
-        document.getElementById('page-game').innerHTML = `
-            <div class="dead-card"><h2>魂断深宫</h2><p>${m}</p><button class="choice-btn" onclick="location.reload()">重新开始</button></div>`;
-    }
-
-    function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
 </script>
 </body>
 </html>
-
