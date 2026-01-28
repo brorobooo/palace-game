@@ -195,7 +195,7 @@
         emperor.deathYear = emperor.currentYear + rnd(15, 25); 
         const ranks = ["宫女", "答应", "贵人"];
         p.rank = ranks[Math.floor(Math.random() * 3)]; 
-        const base = { "宫女":[40,60], "答应":[60,80], "贵人":[75,95] }[p.rank];
+        const base = { "宫女":[45,80], "答应":[80,120], "贵人":[120,150] }[p.rank];
         p.stats = { beauty: rnd(base[0],base[1]), talent: rnd(base[0],base[1]), wit: rnd(base[0],base[1]), body: rnd(40,60), prestige: rnd(5,15), favor: p.rank === "宫女" ? 0 : rnd(1, 10) };
         
         document.getElementById('page-start').classList.add('hidden');
@@ -244,7 +244,7 @@
 
     function handlePregnancy() {
         if (p.pregTimer >= 0) return;
-        let chance = p.stats.body > 150 ? 0.5 : 0.2;
+        let chance = p.stats.body > 200 ? 0.5 : 0.2;
         if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】昨夜蒙君垂怜伴驾良宵，今诊脉得喜，身怀龙裔，幸承天恩！"); }
         updateStatPanel();
     }
@@ -351,6 +351,7 @@
 </script>
 </body>
 </html>
+
 
 
 
