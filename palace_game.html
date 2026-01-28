@@ -248,8 +248,8 @@
     function handlePregnancy() {
         if (p.pregTimer >= 0) return;
         let chance = p.stats.body > 70 ? 0.5 : 0.2;
-        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】你怀有龙裔了！"); }
-        else { alert("【消息】龙颜大悦。"); }
+        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】你昨夜侍奉圣驾。今日太医请脉，喜称你已怀有龙嗣！"); }
+        else { alert("你昨夜侍奉圣驾，皇上待你极其恩厚。"); }
         updateStatPanel();
     }
 
@@ -314,4 +314,5 @@
 </script>
 </body>
 </html>
+
 
