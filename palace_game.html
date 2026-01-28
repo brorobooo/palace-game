@@ -12,22 +12,18 @@
     font-family: "STKaiti", "KaiTi", serif; 
     display: flex; 
     justify-content: center; 
-    /* 这里的修改确保在手机端不会顶死顶部 */
     align-items: center; 
-    min-height: 100vh; 
-    /* 防止手机浏览器地址栏导致的滚动问题 */
+    /* 使用 dvh 单位确保在移动端浏览器导航栏弹出时依然居中 */
     height: 100dvh; 
+    width: 100vw;
     overflow: hidden; 
 }
-       #game-container { 
-    /* 修改 1：自适应宽度，取消 max-width 限制或设为 100% 以消除左右黑边 */
+
+#game-container { 
+    /* 关键：宽度 100% 解决黑边，max-width 限制 PC 端显示 */
     width: 100%; 
-    max-width: 500px; /* 如果你希望在 PC 端不要太宽，保留这个；如果想全屏，改为 100% */
-    
-    /* 修改 2：高度适配，使用 100% 充满屏幕 */
+    max-width: 500px; 
     height: 100%; 
-    max-height: 100vh;
-    
     background: var(--paper) url('https://www.transparenttextures.com/patterns/paper-fibers.png'); 
     border: 8px solid var(--palace-red); 
     outline: 2px solid var(--gold); 
@@ -37,17 +33,26 @@
     display: flex; 
     flex-direction: column; 
     box-shadow: 0 10px 40px rgba(0,0,0,0.7); 
-    
-    /* 修改 3：取消圆角或调整边距，确保视觉平衡 */
-    margin: 0 auto;
+    /* 确保容器在页面正中 */
+    margin: auto;
 }
-        #page-start {
-    flex-grow: 1; /* 让它占满剩余空间 */
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* 真正实现垂直居中 */
-    align-items: center;
-    margin-top: 0 !important; /* 取消之前的 margin-top */
+       /* 修改 #page-start 的样式 */
+#page-start { 
+    flex: 1; /* 让内容区撑满容器 */
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; /* 垂直居中 */
+    align-items: center; 
+    text-align: center; 
+    padding: 20px;
+}
+
+/* 适当调大标题字号，让画面更饱满 */
+#page-start h1 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: var(--palace-red);
+    letter-spacing: 10px;
 }
         header { background: var(--palace-red); color: var(--gold); padding: 15px 0; text-align: center; font-size: 1.4rem; letter-spacing: 4px; border-bottom: 4px double var(--gold); z-index: 5; font-weight: bold; }
         #scene { flex-grow: 1; padding: 25px; display: flex; flex-direction: column; z-index: 4; overflow-y: auto; }
@@ -86,12 +91,12 @@
     <div id="menu-trigger" class="hidden" onclick="toggleStats()">🏮</div>
     
     <div id="scene">
-        <div id="page-start" style="text-align: center; margin-top: 40px;">
-            <h1 style="color: var(--palace-red); letter-spacing: 10px;">深宫词阙</h1>
-            <input type="text" id="p-name" placeholder="于名册留下芳名...">
-            <br>
-            <button class="choice-btn" style="width: 60%; font-size: 1.1rem;" onclick="generateIdentity()">求取签文</button>
-        </div>
+      <div id="page-start">
+    <h1>深宫词阙</h1>
+    <input type="text" id="p-name" placeholder="于名册留下芳名...">
+    <br>
+    <button class="choice-btn" style="width: 80%; max-width: 300px; font-size: 1.2rem;" onclick="generateIdentity()">求取签文</button>
+</div>
 
         <div id="page-identity" class="hidden">
             <div id="identity-content">
@@ -393,6 +398,7 @@
 </script>
 </body>
 </html>
+
 
 
 
