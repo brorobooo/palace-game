@@ -206,6 +206,10 @@ input[type="text"] {
     <div id="stat-panel">
         <h3 style="text-align:center; color:var(--gold); margin-top:0;">个人档籍</h3>
         <div id="stat-content"></div>
+        <div class="stat-group" style="border:none; background:none;">
+    <button class="choice-btn" style="background:#4a0404; color:var(--gold);" onclick="saveGame()">保存当前进度</button>
+    <button class="choice-btn" style="background:#042a04; color:var(--gold);" onclick="loadGame()">读取历史存档</button>
+</div>
         <button class="choice-btn" style="background:none; color:var(--gold); margin-top:10px;" onclick="toggleStats()">收回卷轴</button>
     </div>
 
@@ -408,6 +412,48 @@ input[type="text"] {
             </div>
         `;
     }
+    // --- 存档功能 ---
+function saveGame() {
+    const saveData = {
+        p: p,
+        emperor: emperor,
+        usedPlotIds: Array.from(usedPlotIds), // Set 需要转成数组才能保存
+        lastWasDeadly: lastWasDeadly
+    };
+    localStorage.setItem('palace_game_save', JSON.stringify(saveData));
+    alert("【系统】进度已封存于卷轴，可随时回溯。");
+}
+
+// --- 读档功能 ---
+async function loadGame() {
+    const savedRaw = localStorage.getItem('palace_game_save');
+    if (!savedRaw) {
+        alert("【提示】尚无存档记录，请先开启一段人生。");
+        return;
+    }
+    
+    const data = JSON.parse(savedRaw);
+    
+    // 还原数据
+    p = data.p;
+    emperor = data.emperor;
+    usedPlotIds = new Set(data.usedPlotIds);
+    lastWasDeadly = data.lastWasDeadly;
+
+    // 重新加载对应位分的剧情库
+    await loadRankStory(p.rank);
+    
+    // 切换界面并刷新显示
+    document.getElementById('page-start').classList.add('hidden');
+    document.getElementById('page-identity').classList.add('hidden');
+    document.getElementById('page-game').classList.remove('hidden');
+    document.getElementById('menu-trigger').classList.remove('hidden');
+    document.getElementById('stat-panel').classList.add('active');
+    
+    updateStatPanel();
+    showPlot(); // 继续之前的剧情
+    alert("【系统】时光回溯，重返宫廷。");
+}
 
     function handlePregnancy() {
         if (p.pregTimer >= 0) return;
@@ -518,6 +564,7 @@ input[type="text"] {
 </script>
 </body>
 </html>
+
 
 
 
