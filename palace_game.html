@@ -131,24 +131,27 @@ input[type="text"] {
 .choice-btn:active {
     transform: scale(0.97);
 }
-
-/* ===== Stats Panel ===== */
-#stat-panel {
-    position: absolute;
-    right: -100%;
-    top: 0;
-    width: 80%;
-    height: 100%;
-    background: rgba(20,20,20,.97);
-    color: #ddd;
-    z-index: 100;
-    padding: 1.2rem;
-    transition: right .35s ease;
+    /* 修改后的卷轴样式 */
+#stat-panel { 
+    position: absolute; 
+    right: -110%; /* 默认完全隐藏在右侧之外 */
+    top: 0; 
+    width: 85%; 
+    height: 100%; 
+    background: rgba(30, 30, 30, 0.98); 
+    color: #ddd; 
+    transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1); /* 增加平滑动画 */
+    z-index: 100; 
+    padding: 40px 20px; 
+    box-sizing: border-box; 
+    border-left: 3px solid var(--gold); 
     overflow-y: auto;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.5);
 }
 
-#stat-panel.open {
-    right: 0;
+/* 只有当 open 类存在时，才滑入屏幕 */
+#stat-panel.open { 
+    right: 0; 
 }
 
 .stat-group {
@@ -204,14 +207,28 @@ input[type="text"] {
     <header>深宫华章：凤权弈</header>
     
     <div id="stat-panel">
-        <h3 style="text-align:center; color:var(--gold); margin-top:0;">个人档籍</h3>
-        <div id="stat-content"></div>
-        <div class="stat-group" style="border:none; background:none;">
-    <button class="choice-btn" style="background:#4a0404; color:var(--gold);" onclick="saveGame()">保存当前进度</button>
-    <button class="choice-btn" style="background:#042a04; color:var(--gold);" onclick="loadGame()">读取历史存档</button>
-</div>
-        <button class="choice-btn" style="background:none; color:var(--gold); margin-top:10px;" onclick="toggleStats()">收回卷轴</button>
+    <h3 style="text-align:center; color:var(--gold); margin-top:0;">个人档籍</h3>
+    <div id="stat-content"></div>
+    
+    <div class="stat-group">
+        <h4>乐音调节</h4>
+        <div class="volume-ctrl">
+            <label>背景音</label>
+            <input type="range" id="bgm-vol" min="0" max="1" step="0.1" value="0.5" oninput="adjustVolume()">
+        </div>
+        <div class="volume-ctrl">
+            <label>音效</label>
+            <input type="range" id="se-vol" min="0" max="1" step="0.1" value="0.7" oninput="adjustVolume()">
+        </div>
     </div>
+
+    <div class="stat-group" style="border:none; background:none; display:flex; gap:5px;">
+        <button class="choice-btn" style="background:#4a0404; color:var(--gold); flex:1;" onclick="saveGame()">存档</button>
+        <button class="choice-btn" style="background:#042a04; color:var(--gold); flex:1;" onclick="loadGame()">读档</button>
+    </div>
+    
+    <button class="choice-btn" style="background:none; color:var(--gold); margin-top:10px;" onclick="toggleStats()">收回卷轴</button>
+</div>
 
     <div id="menu-trigger" class="hidden" onclick="toggleStats()">🏮</div>
     
@@ -564,6 +581,7 @@ async function loadGame() {
 </script>
 </body>
 </html>
+
 
 
 
