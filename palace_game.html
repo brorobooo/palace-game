@@ -163,7 +163,7 @@
     // --- 万能属性解析逻辑 ---
     function applyEffect(effectStr) {
         if (!effectStr || effectStr === "无") return;
-        if (effectStr === "死亡") { gameOver("红颜命薄，魂断深宫。"); return "DEAD"; }
+        if (effectStr === "死亡") { gameOver("深宫诡谲难测，一朝命陨红墙，徒留一声叹息。"); return "DEAD"; }
         
         const attrMap = {"容貌":"beauty", "心机":"wit", "体质":"body", "才情":"talent", "声望":"prestige", "圣宠":"favor"};
         effectStr.split(';').forEach(change => {
@@ -351,6 +351,7 @@
 </script>
 </body>
 </html>
+
 
 
 
