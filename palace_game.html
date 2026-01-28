@@ -87,8 +87,10 @@
     let p = { name: "", rank: "", year: 1, quarter: 1, stats: {}, children: { male: 0, female: 0 }, pregTimer: -1 };
     let currentPool = [];
     let usedPlotIds = new Set(); 
+    let lastWasDeadly = false; // 死局冷却控制
 
-    const ENDING_DB = {
+    // --- 结局数据库 ---
+   const ENDING_DB = {
         "答应": { 
             son: [
                 { title: "长信空灯", text: "先帝驾崩，新帝登基。你位份低微，无缘前往皇子封地。新帝念及兄弟情分，将你安置在皇家别苑。你将所有希望寄托在皇子身上，余生在思念与期盼中度过。" },
@@ -130,6 +132,7 @@
             none: [ { title: "继后长尊", text: "虽无子嗣，但作为正宫，新帝依旧尊你为母后皇太后。你稳居后宫主持大局，安享无上尊荣。" } ]
         }
     };
+
 
     window.onload = function() {
         document.getElementById('loading-overlay').classList.add('hidden');
@@ -251,7 +254,7 @@
         if (p.rank === "宫女") return { title: "重获自由", text: "皇上驾崩，你作为卑微宫女被遣散出宫，重获自由。" };
         let pool = ENDING_DB[p.rank] || ENDING_DB["答应"];
         let outcomes = p.children.male > 0 ? pool.son : (p.children.female > 0 ? pool.daughter : pool.none);
-        let result = outcomes[Math.floor(Math.random() * outcomes.length)];
+        let result = outcomes[Math.floor(Math.random() * outcomes.length)] || {title: "终老宫中", text: "岁月流转，你最终在宫墙内平静走完了一生。"};
         return { title: result.title, text: result.text };
     }
 
@@ -262,15 +265,26 @@
             showEnding(end.title, end.text); return; 
         }
 
-        // 修改1: 宫女出宫年限改为10年
+        // 核心修改1: 宫女出宫年限改为10年
         if (p.rank === "宫女" && p.year > 10) {
             showEnding("重获自由", "你在宫中服役十载，终获恩典遣散出宫。"); return;
         }
 
         let available = currentPool.filter(s => !usedPlotIds.has(s.id));
+        
+        // 核心修改2: 死局冷却逻辑，防止连续遇到死亡判定
+        if (lastWasDeadly) {
+            available = available.filter(s => 
+                !s.choices[0].fEff.includes("死亡") && !s.choices[1].fEff.includes("死亡")
+            );
+        }
+
         if (available.length === 0) { usedPlotIds.clear(); available = currentPool; }
         let s = available[Math.floor(Math.random() * available.length)];
         usedPlotIds.add(s.id);
+
+        // 记录本关是否为死局
+        lastWasDeadly = (s.choices[0].fEff.includes("死亡") || s.choices[1].fEff.includes("死亡"));
 
         document.getElementById('story-text').innerHTML = `<strong>【${s.title}】</strong><br>${s.text}`;
         const area = document.getElementById('choices-area'); area.innerHTML = "";
@@ -288,7 +302,7 @@
 
                 if (pass && s.isBed === "1") handlePregnancy();
 
-                // 修改2: 圣宠晋升判定逻辑 (答应门槛调至100)
+                // 核心修改3: 圣宠晋升判定逻辑 (答应门槛调至100)
                 let promotionMsg = "";
                 const rankOrder = ["宫女", "答应", "贵人", "妃", "贵妃", "皇后"];
                 const rankReq = { "答应": 100, "贵人": 200, "妃": 500, "贵妃": 1000, "皇后": 2500 };
@@ -298,7 +312,7 @@
                     p.rank = nextRank;
                     p.year = 1; p.quarter = 1;
                     usedPlotIds.clear();
-                    await loadRankStory(p.rank);
+                    await loadRankStory(p.rank); // 自动切换到新位份的剧情库
                     promotionMsg = `<br><b style="color:#8b1b1b">【晋升】圣宠达标，你已被册封为${p.rank}！</b>`;
                 }
 
