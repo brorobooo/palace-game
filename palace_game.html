@@ -2,66 +2,65 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>深宫华章 - 全属性命运版</title>
+    <title>深宫华章：凤权弈命</title>
     <style>
         :root { --palace-red: #8b1b1b; --gold: #c5a059; --paper: #f4f1de; --ink: #2c2c2c; --success-bg: #fffafa; }
         body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         #game-container { width: 95%; max-width: 450px; height: 90vh; background: var(--paper) url('https://www.transparenttextures.com/patterns/paper-fibers.png'); border: 8px solid var(--palace-red); outline: 2px solid var(--gold); outline-offset: -5px; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
-        header { background: var(--palace-red); color: var(--gold); padding: 15px 0; text-align: center; font-size: 1.6rem; letter-spacing: 6px; border-bottom: 4px double var(--gold); z-index: 5; }
+        header { background: var(--palace-red); color: var(--gold); padding: 15px 0; text-align: center; font-size: 1.4rem; letter-spacing: 4px; border-bottom: 4px double var(--gold); z-index: 5; font-weight: bold; }
         #scene { flex-grow: 1; padding: 25px; display: flex; flex-direction: column; z-index: 4; overflow-y: auto; }
         
-        /* 侧边栏样式优化 */
-        #stat-panel { position: absolute; right: -100%; top: 0; width: 80%; height: 100%; background: rgba(44, 44, 44, 0.95); color: #eee; transition: right 0.4s ease; z-index: 100; padding: 40px 20px; box-sizing: border-box; border-left: 4px solid var(--gold); display: none; overflow-y: auto; }
+        /* 侧边栏档籍系统 */
+        #stat-panel { position: absolute; right: -100%; top: 0; width: 80%; height: 100%; background: rgba(30, 30, 30, 0.98); color: #ddd; transition: right 0.4s ease; z-index: 100; padding: 40px 20px; box-sizing: border-box; border-left: 3px solid var(--gold); display: none; overflow-y: auto; }
         #stat-panel.active { display: block; }
         #stat-panel.open { right: 0; }
-        .stat-group { margin-bottom: 20px; border: 1px solid var(--gold); padding: 10px; background: rgba(0,0,0,0.3); }
-        .stat-group h4 { margin: 0 0 10px 0; color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 5px; font-size: 1rem; }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; border-bottom: 1px dotted rgba(255,255,255,0.1); }
+        .stat-group { margin-bottom: 15px; border: 1px solid var(--gold); padding: 10px; background: rgba(0,0,0,0.2); }
+        .stat-group h4 { margin: 0 0 8px 0; color: var(--gold); border-bottom: 1px solid rgba(197, 160, 89, 0.4); padding-bottom: 3px; font-size: 0.9rem; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem; }
         .stat-val { color: var(--gold); font-weight: bold; }
 
-        #menu-trigger { position: absolute; bottom: 20px; right: 20px; width: 55px; height: 55px; background: var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 30px; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 101; }
-        .message { background: rgba(255,255,255,0.6); padding: 20px; border: 1px solid var(--gold); line-height: 1.8; color: var(--ink); font-size: 1.1rem; margin-bottom: 25px; }
-        .choice-btn { background: white; color: var(--palace-red); border: 1px solid var(--palace-red); padding: 12px 15px; margin-bottom: 12px; cursor: pointer; font-family: "STKaiti", serif; font-size: 1rem; transition: 0.3s; box-shadow: 2px 2px 0 var(--gold); }
-        .choice-btn:hover { background: var(--palace-red); color: var(--gold); transform: translateX(3px); }
-        .btn-danger { color: #fff; background: #660000; border-color: #330000; }
+        #menu-trigger { position: absolute; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 24px; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 101; }
+        .message { background: rgba(255,255,255,0.7); padding: 18px; border: 1px solid var(--gold); line-height: 1.7; color: var(--ink); font-size: 1.05rem; margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(197,160,89,0.1); }
+        .choice-btn { background: white; color: var(--palace-red); border: 1px solid var(--palace-red); padding: 12px 10px; margin-bottom: 10px; cursor: pointer; font-family: "STKaiti", serif; font-size: 1rem; transition: 0.2s; box-shadow: 2px 2px 0 var(--gold); width: 100%; }
+        .choice-btn:hover { background: var(--palace-red); color: var(--gold); transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--gold); }
         .hidden { display: none !important; }
-        input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 70%; padding: 10px; font-size: 1.2rem; text-align: center; margin: 30px 0; outline: none; font-family: "STKaiti", serif; }
+        input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 70%; padding: 10px; font-size: 1.2rem; text-align: center; margin: 20px 0; outline: none; font-family: "STKaiti", serif; }
         #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:var(--paper); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-        .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 30px; text-align: center; min-height: 70%; display: flex; flex-direction: column; justify-content: center; }
-        .dead-card { border: 4px solid #600; background: #1a0000; color: #ff4d4d; padding: 30px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+        .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 25px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+        .dead-card { border: 4px solid #600; background: #1a0000; color: #ff4d4d; padding: 25px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="loading-overlay"><div id="load-status">正在加载宫廷卷宗...</div></div>
-    <header>深宫华章</header>
+    <div id="loading-overlay"><div id="load-status">载入大典中...</div></div>
+    <header>深宫华章：凤权弈命</header>
     
     <div id="stat-panel">
-        <h2 style="text-align:center; color:var(--gold); letter-spacing: 5px;">个人档籍</h2>
+        <h3 style="text-align:center; color:var(--gold); margin-top:0;">个人档籍</h3>
         <div id="stat-content"></div>
-        <button class="choice-btn" style="width:100%; margin-top:20px; background:transparent; color:var(--gold); border-color:var(--gold);" onclick="toggleStats()">合上卷轴</button>
+        <button class="choice-btn" style="background:none; color:var(--gold); margin-top:10px;" onclick="toggleStats()">收回卷轴</button>
     </div>
 
     <div id="menu-trigger" class="hidden" onclick="toggleStats()">🏮</div>
     
     <div id="scene">
-        <div id="page-start" style="text-align: center; margin-top: 60px;">
-            <h1 style="color: var(--palace-red); letter-spacing: 12px;">百花齐放</h1>
+        <div id="page-start" style="text-align: center; margin-top: 40px;">
+            <h1 style="color: var(--palace-red); letter-spacing: 10px;">百花齐放</h1>
             <input type="text" id="p-name" placeholder="请输入芳名">
             <br>
-            <button class="choice-btn" style="padding: 15px 50px; font-size: 1.2rem;" onclick="generateIdentity()">求取签文</button>
+            <button class="choice-btn" style="width: 60%; font-size: 1.1rem;" onclick="generateIdentity()">求取签文</button>
         </div>
 
         <div id="page-identity" class="hidden">
             <div id="identity-content">
                 <div class="message" style="text-align: center;" id="era-intro"></div>
-                <div style="border: 2px solid var(--palace-red); padding: 20px; background: #fffafa; text-align: center; margin-bottom: 20px;">
+                <div style="border: 2px solid var(--palace-red); padding: 15px; background: #fffafa; text-align: center; margin-bottom: 15px;">
                     <h2 id="display-rank" style="color: var(--palace-red); margin: 0;"></h2>
-                    <div id="display-stats-preview" style="margin-top: 15px; text-align: left; display: inline-block; line-height: 2;"></div>
+                    <div id="display-stats-preview" style="margin-top: 10px; text-align: left; display: inline-block; font-size: 0.95rem; line-height: 1.8;"></div>
                 </div>
-                <button class="choice-btn" style="width: 100%;" onclick="enterPalace()">领旨入宫</button>
-                <button class="choice-btn btn-danger" style="width: 100%; margin-top: 10px;" onclick="resistDecree()">抗旨不尊</button>
+                <button class="choice-btn" onclick="enterPalace()">领旨入宫</button>
+                <button class="choice-btn" style="background:#400; color:#fff;" onclick="resistDecree()">抗旨不尊</button>
             </div>
         </div>
 
@@ -80,84 +79,51 @@
     let plotLibrary = [];
     let usedPlotIds = new Set(); 
 
-// --- 结局数据库（文雅优化版 & 全位份公主补完） ---
+    // --- 结局数据库 ---
     const ENDING_DB = {
         "答应": { 
             son: [
-                { title: "长信空灯", text: "先帝驾崩，新帝登基。你位份低微，无缘前往皇子封地。新帝念及兄弟情分，将你安置在皇家别苑，衣食无忧却终生不得踏出苑门。你将所有希望寄托在皇子身上，余生在思念与期盼中度过。" },
-                { title: "封地颐养", text: "你的皇子受封郡王，得以前往封地就藩。你突破低位嫔妃的宿命，随子前往封地，成为王府太妃。远离宫廷纷争，不必再看他人脸色，虽无无上权势，却拥有了寻常妇人的安稳，安享晚年。" },
-                { title: "失怙伶仃", text: "先帝骤崩，你年幼的皇子受惊染病夭折。失去唯一的依靠，你被遗忘在冷宫偏殿。无人问津，粗茶淡饭，在无尽的孤寂与悲痛中，潦草走完一生。" }
+                { title: "长信空灯", text: "先帝驾崩，新帝登基。你位份低微，无缘前往皇子封地。新帝念及兄弟情分，将你安置在皇家别苑。你将所有希望寄托在皇子身上，余生在思念与期盼中度过。" },
+                { title: "封地颐养", text: "你的皇子受封郡王，得以前往封地就藩。你随子前往封地，成为王府太妃。远离宫廷纷争，虽无无上权势，却拥有了寻常妇人的安稳，安享晚年。" }
             ],
-            daughter: [
-                { title: "别苑晚香", text: "虽无皇子加封，但新帝念你育有公主，免你守陵之苦，将你安置在行宫养老。公主时常奉旨探望，虽无大富大贵，倒也在母女温情中得了一份安宁。" }
-            ],
-            none: [
-                { title: "青灯伴冢", text: "作为无宠无嗣的低位嫔妃，你被安排前往皇家陵寝，为先帝守陵。青灯古佛，黄土孤冢，此生与繁华宫廷彻底隔绝，在清冷与孤寂中耗尽余生。" },
-                { title: "归隐凡尘", text: "新帝推行仁政，大赦后宫。你家族尚有亲人在世，得以特许出宫，回归民间。褪去宫装，卸下钗环，你隐于市井，嫁作凡人妇，过上了平淡的生活。" },
-                { title: "枯骨无人", text: "你无宠无势且无子嗣，被随意安置在冷宫偏殿。宫中新人换旧人，再也无人记得你的存在。最终在无人知晓的日子里，悄然离世。" }
-            ] 
+            daughter: [ { title: "别苑晚香", text: "虽无皇子加封，但新帝念你育有公主，免你守陵之苦，将你安置在行宫养老。公主时常奉旨探望，倒也在母女温情中得了一份安宁。" } ],
+            none: [ { title: "青灯伴冢", text: "作为无宠无嗣的低位嫔妃，你被安排前往皇家陵寝，为先帝守陵。青灯古佛，此生与繁华宫廷彻底隔绝。" } ]
         },
         "贵人": { 
             son: [
-                { title: "金印荣归", text: "你的皇子天资聪颖，获封亲王。你被尊为皇太妃，迁居太妃府，享有丰厚俸禄。皇子时常前来请安，你在尊崇与亲情中，安度富贵晚年。" },
-                { title: "禁宫余恨", text: "你的皇子曾参与夺嫡最终落败。新帝念及手足仅将其贬为庶人，你却被剥夺封号，禁足在偏僻宫殿，终生不得与子相见，在悔恨中苟活。" }
+                { title: "金印荣归", text: "你的皇子天资聪颖，获封亲王。你被尊为皇太妃，享有丰厚俸禄。皇子时常前来请安，你在尊崇与亲情中，安度富贵晚年。" },
+                { title: "禁宫余恨", text: "你的皇子曾参与夺嫡最终落败。你被剥夺封号，禁足在偏僻宫殿，终生不得与子见，在悔恨中苟活。" }
             ], 
-            daughter: [
-                { title: "和亲离怨", text: "你育有公主，新帝为稳固邦交将其送往远嫁和亲。新帝感念你的隐忍，加封你为嫔。你时常望着和亲的方向，余生在思念与虚荣的位分中交织。" }
-            ], 
-            none: [
-                { title: "梵音洗尘", text: "你主动请旨前往皇家寺院修行。每日诵经礼佛，清心寡欲。宫中会按时送来份例，你安然度过余生，死后以太妃之礼安葬。" },
-                { title: "依附权势", text: "你早年与某位贵妃交好，对方子嗣登基。你凭借旧情得到生母照拂，安置在优渥宫殿。虽无骨肉，却能安稳度日，得以善终。" },
-                { title: "晚景落索", text: "你曾参与宫斗得罪新帝生母。先帝驾崩后被清算，贬为庶人逐出皇宫。你失去所有荣华，流落民间，晚景凄凉。" }
-            ] 
+            daughter: [ { title: "和亲离怨", text: "你育有公主，新帝为稳固邦交将其送往远嫁和亲。新帝感念你的隐忍，加封你为嫔。你时常望着和亲的方向，余生在思念与荣耀中交织。" } ], 
+            none: [ { title: "梵音洗尘", text: "你主动请旨前往皇家寺院修行。每日诵经礼佛，清心寡欲。宫中按时送来份例，你安然度过余生。" } ] 
         },
         "妃": { 
             son: [
-                { title: "珠帘参政", text: "你的皇子是新帝的得力臂膀。你被册封为皇考贵妃，地位仅次于太后。后宫之中无人敢与你抗衡，你协助太后管理后宫，权倾一时。" },
-                { title: "藩王至尊", text: "你的皇子受封富庶亲王。你前往封地成为最尊贵的太妃。皇子孝顺，你无需理会朝堂纷争，尽享荣华富贵，寿终正寝。" },
-                { title: "泣血慈母", text: "皇子遭奸人陷害被赐死。你被废黜封号，禁足在皇陵宫殿。余生都在为儿子祈福，在无尽的痛苦中离世。" }
+                { title: "珠帘参政", text: "你的皇子是新帝的得力臂膀。你被册封为皇考贵妃，地位仅次于太后。后宫之中无人敢与你抗衡，权倾一时。" },
+                { title: "藩王至尊", text: "你的皇子受封亲王。你前往封地成为最尊贵的太妃。皇子孝顺，尽享荣华富贵，寿终正寝。" }
             ], 
-            daughter: [
-                { title: "华阳晚福", text: "虽无皇子，但你的多位公主皆嫁入名门。新帝礼遇功臣，尊你为太妃，让你在宫中颐养天年。每逢佳节，女儿女婿入宫觐见，也算享尽天伦之乐。" }
-            ],
-            none: [
-                { title: "德望长者", text: "你一生贤良淑德。虽无子嗣，新帝依旧尊你为皇太妃。你不参与纷争，安享清福，成为后宫中受人敬重的长者。" },
-                { title: "母家恩荫", text: "你的家族在朝堂上权势稳固。新帝为拉拢家族对你礼遇有加。你凭借家族势力在后宫拥有一席之地，安稳度过余生。" },
-                { title: "仙苑闲云", text: "你看透沉浮，主动请旨前往别院。你在别院种花种草，闲云野鹤，远离纷争，度过惬意的晚年。" }
-            ] 
+            daughter: [ { title: "华阳晚福", text: "虽无皇子，但你的公主皆嫁入名门。新帝礼遇功臣，尊你为太妃。每逢佳节，女儿女婿入宫觐见，也算享尽天伦之乐。" } ],
+            none: [ { title: "德望长者", text: "你一生贤良淑德。虽无子嗣，新帝依旧尊你为皇太妃。安享清福，成为后宫中受人敬重的长者。" } ]
         },
         "贵妃": { 
             son: [
-                { title: "慈宁夕照", text: "你的儿子登基为帝。你母凭子贵被尊为皇太后，入住慈宁宫。手握后宫大权，垂帘听政。你成为了天下最尊贵的女人。" },
-                { title: "封疆太妃", text: "你的皇子未能继承大统。新帝感念你的势力尊你为皇太妃。你携皇子前往封地，与新帝互不干涉，安稳保全家族。" },
+                { title: "慈宁夕照", text: "你的儿子登基为帝。你母凭子贵被尊为皇太后，入住慈宁宫。手握后宫大权，成为了天下最尊贵的女人。" },
                 { title: "权略春秋", text: "新帝年幼，你作为皇子生母联合朝臣辅政。虽无太后之名，却有太后之实，一生在王朝权力中心周旋。" }
             ], 
-            daughter: [
-                { title: "长宁尊养", text: "作为先帝贵妃，你虽只有公主，但新帝仍尊你为皇考贵妃。你在宫中享有极高的规格待遇，连新任皇后也要对你礼让三分，富贵一生。" }
-            ],
-            none: [
-                { title: "名留史传", text: "你能力出众被托付辅佐新帝。虽无子嗣却深得信任。你协助太后稳定局势，成为一代贤妃，名留青史。" },
-                { title: "抚育恩重", text: "你曾抚育新帝。新帝登基后尊你为皇太妃，给予无上礼遇。你在宫中安享荣华，地位超然。" },
-                { title: "孤灯凄影", text: "你曾与新帝生母势同水火。先帝驾崩后荣华尽失，被迁居偏僻宫殿，在寂寞中度过余生。" }
-            ] 
+            daughter: [ { title: "长宁尊养", text: "作为先帝贵妃，你虽只有公主，但新帝仍尊你为皇考贵妃。你在宫中享有极高规格待遇，富贵一生。" } ],
+            none: [ { title: "名留史传", text: "你能力出众被托付辅佐新帝。虽无子嗣却深得信任。协助太后稳定局势，成为一代贤妃，名留青史。" } ]
         },
         "皇后": { 
             son: [
-                { title: "母仪天下", text: "你的嫡子继位。你名正言顺尊为圣母皇太后，执掌后宫。辅佐新帝开创盛世，死后与先帝合葬，享尽哀荣。" },
-                { title: "嫡母尊位", text: "新帝为庶子，你依旧以嫡母身份尊为皇太后。凭借地位稳坐后宫头把交椅，掌控后宫格局。" },
-                { title: "定鼎辅国", text: "皇子年幼登基，你作为托孤之人稳定朝局。你一生为皇室基业操劳，成为力挽狂澜的一代贤后。" }
+                { title: "母仪天下", text: "你的嫡子继位。你名正言顺尊为圣母皇太后。辅佐新帝开创盛世，死后与先帝合葬，享尽哀荣。" },
+                { title: "嫡母尊位", text: "新帝为庶子，你依旧以嫡母身份尊为皇太后。凭借地位稳坐后宫头把交椅。" }
             ], 
-            daughter: [
-                { title: "长乐太后", text: "先帝驾崩时你仅育有公主，但作为正宫皇后，你被尊为母后皇太后。即便新帝生母在世，也需向你行礼。你一生贵不可言。" }
-            ],
-            none: [
-                { title: "继后长尊", text: "虽无子嗣，但你贤良淑德。新帝依旧尊你为母后皇太后。你稳居后宫主持大局，安享无上尊荣。" },
-                { title: "归鹤玄门", text: "你看透朝堂主动放弃权力，前往皇陵守陵。青灯古佛相伴，为先帝与苍生祈福，安然离世。" },
-                { title: "凤台遗恨", text: "你无子且在夺嫡中站错队。新帝登基后废黜你为庶人，囚禁在冷宫。曾经的后宫之主，晚景凄凉。" }
-            ] 
+            daughter: [ { title: "长乐太后", text: "先帝驾崩时你仅育有公主，但作为正宫皇后，你被尊为母后皇太后。即便新帝生母在世，也需向你行礼，贵不可言。" } ],
+            none: [ { title: "继后长尊", text: "虽无子嗣，但作为正宫，新帝依旧尊你为母后皇太后。你稳居后宫主持大局，安享无上尊荣。" } ]
         }
     };
 
+    // --- 核心逻辑 ---
     window.onload = async function() {
         try {
             const response = await fetch(CSV_URL);
@@ -165,7 +131,7 @@
             const text = new TextDecoder('utf-8').decode(buffer);
             parseCSV(text);
             document.getElementById('loading-overlay').classList.add('hidden');
-        } catch (err) { document.getElementById('load-status').innerText = "加载失败"; }
+        } catch (err) { document.getElementById('load-status').innerText = "加载失败，请检查网络"; }
     };
 
     function parseCSV(text) {
@@ -190,7 +156,7 @@
 
     function generateIdentity() {
         const nameInput = document.getElementById('p-name').value;
-        if (!nameInput) return alert("请赐名");
+        if (!nameInput) return alert("请在名册上留下芳名");
         p.name = nameInput;
         emperor.eraName = eraNames[Math.floor(Math.random() * eraNames.length)];
         emperor.currentYear = rnd(1, 20); 
@@ -218,28 +184,26 @@
 
     function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
 
-    // --- 核心修复：补全档籍信息 ---
     function updateStatPanel() {
-        let status = p.pregTimer >= 0 ? "怀有身孕" : "常态";
+        let status = p.pregTimer >= 0 ? "<span style='color:#ffb700'>怀有龙裔</span>" : "平常";
         document.getElementById('stat-content').innerHTML = `
             <div class="stat-group">
                 <h4>宫廷背景</h4>
-                <div class="stat-row"><span>当前年号</span><span class="stat-val">${emperor.eraName} ${emperor.currentYear}年</span></div>
-                <div class="stat-row"><span>入宫时长</span><span class="stat-val">第${p.year}年 第${p.quarter}季</span></div>
+                <div class="stat-row"><span>年号</span><span class="stat-val">${emperor.eraName} ${emperor.currentYear}年</span></div>
+                <div class="stat-row"><span>入宫</span><span class="stat-val">第${p.year}年 ${p.quarter}季</span></div>
             </div>
             <div class="stat-group">
                 <h4>个人状态</h4>
-                <div class="stat-row"><span>姓名位份</span><span class="stat-val">${p.name} · ${p.rank}</span></div>
-                <div class="stat-row"><span>身体状况</span><span class="stat-val">${status}</span></div>
-                <div class="stat-row"><span>皇子/公主</span><span class="stat-val">${p.children.male}男 / ${p.children.female}女</span></div>
+                <div class="stat-row"><span>位份</span><span class="stat-val">${p.rank}</span></div>
+                <div class="stat-row"><span>身孕</span><span class="stat-val">${status}</span></div>
+                <div class="stat-row"><span>子嗣</span><span class="stat-val">${p.children.male}皇子 / ${p.children.female}公主</span></div>
             </div>
             <div class="stat-group">
-                <h4>各项数值</h4>
+                <h4>属性数值</h4>
                 <div class="stat-row"><span>容貌</span><span class="stat-val">${p.stats.beauty}</span></div>
                 <div class="stat-row"><span>才情</span><span class="stat-val">${p.stats.talent}</span></div>
                 <div class="stat-row"><span>体质</span><span class="stat-val">${p.stats.body}</span></div>
                 <div class="stat-row"><span>心机</span><span class="stat-val">${p.stats.wit}</span></div>
-                <div class="stat-row"><span>声望</span><span class="stat-val">${p.stats.prestige}</span></div>
                 <div class="stat-row"><span>圣宠</span><span class="stat-val" style="color:#ff4d4d">${p.stats.favor}</span></div>
             </div>
         `;
@@ -248,23 +212,44 @@
     function handlePregnancy() {
         if (p.pregTimer >= 0) return;
         let chance = p.stats.body > 70 ? 0.5 : 0.2;
-        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】你昨夜侍奉圣驾。今日太医请脉，喜称你已怀有龙嗣！"); }
-        else { alert("你昨夜侍奉圣驾，皇上待你极其恩厚。"); }
+        if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】龙脉有续，你已怀有龙裔！"); }
+        else { alert("【消息】侍寝恩重，皇上对你关怀备至。"); }
         updateStatPanel();
     }
 
     function giveBirth() {
         let roll = Math.random();
-        if (roll < 0.05) { p.children.male++; p.children.female++; alert("诞下龙凤胎！"); }
-        else if (roll < 0.5) { p.children.male++; alert("诞下皇子！"); }
-        else { p.children.female++; alert("诞下公主！"); }
+        if (roll < 0.05) { p.children.male++; p.children.female++; alert("诞下龙凤双胞胎！"); }
+        else if (roll < 0.5) { p.children.male++; alert("诞下了一位皇子！"); }
+        else { p.children.female++; alert("诞下了一位公主！"); }
         p.pregTimer = -1;
         updateStatPanel();
     }
 
+    function getDeathEnding() {
+        if (p.rank === "宫女") return { title: "重获自由", text: "皇上驾崩，你作为卑微宫女被遣散出宫，重获自由。" };
+        let pool = ENDING_DB[p.rank] || ENDING_DB["答应"];
+        let outcomes = [];
+        let extraMsg = ""; 
+
+        if (p.children.male > 0 && p.children.female > 0) {
+            extraMsg = "<span style='color:#c5a059'><b>【龙凤呈祥】</b>你膝下既有皇子支撑门庭，又有公主承欢膝下，福泽深厚。</span><br><br>";
+        }
+
+        if (p.children.male > 0) outcomes = pool.son;
+        else if (p.children.female > 0) outcomes = pool.daughter;
+        else outcomes = pool.none;
+
+        let result = outcomes[Math.floor(Math.random() * outcomes.length)];
+        return { title: result.title, text: extraMsg + result.text };
+    }
+
     function showPlot() {
         if (p.pregTimer >= 0) { p.pregTimer++; if (p.pregTimer >= 3) giveBirth(); }
-        if (emperor.currentYear >= emperor.deathYear) { /* 驾崩判定逻辑... */ showEnding("大限已至", "皇帝驾崩了。"); return; }
+        if (emperor.currentYear >= emperor.deathYear) { 
+            let end = getDeathEnding();
+            showEnding(end.title, end.text); return; 
+        }
 
         let candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year && !usedPlotIds.has(item.id));
         if (candidates.length === 0) { usedPlotIds.clear(); candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year); }
@@ -276,7 +261,7 @@
         
         s.choices.forEach(c => {
             if(!c.text) return;
-            let btn = document.createElement('button'); btn.className = "choice-btn"; btn.style.width = "100%"; btn.innerText = c.text;
+            let btn = document.createElement('button'); btn.className = "choice-btn"; btn.innerText = c.text;
             btn.onclick = () => {
                 let pass = true;
                 const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
@@ -288,7 +273,7 @@
                     p.quarter++; if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
                     updateStatPanel();
                     document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
-                    area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">继续</button>`;
+                    area.innerHTML = `<button class="choice-btn" onclick="showPlot()">继续</button>`;
                 } else {
                     gameOver(c.resFail || "你未能通过考验，惨死宫中。");
                 }
@@ -298,21 +283,16 @@
     }
 
     function showEnding(title, msg) {
-        document.getElementById('page-game').innerHTML = `
-            <div class="end-card">
-                <h2 style="color:var(--palace-red); letter-spacing: 5px;">${title}</h2>
-                <div style="line-height:1.8; margin:20px 0; color:var(--ink);">${msg}</div>
-                <button class="choice-btn" style="width:100%; margin-top:20px;" onclick="location.reload()">再入轮回</button>
-            </div>`;
+        document.getElementById('page-game').innerHTML = `<div class="end-card"><h2 style="color:var(--palace-red);">${title}</h2><div style="line-height:1.8; margin:20px 0;">${msg}</div><button class="choice-btn" onclick="location.reload()">再入轮回</button></div>`;
     }
 
     function gameOver(res) {
-        document.getElementById('page-game').innerHTML = `
-            <div class="dead-card"><h2>魂断深宫</h2><div style="margin:20px 0;">${res}</div><button class="choice-btn" style="width:100%; background:#400; color:#fff;" onclick="location.reload()">重新开始</button></div>`;
+        document.getElementById('page-game').innerHTML = `<div class="dead-card"><h2>魂断深宫</h2><div style="margin:20px 0;">${res}</div><button class="choice-btn" style="background:#400; color:#fff;" onclick="location.reload()">重新开始</button></div>`;
     }
-    function resistDecree() { document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊，满门抄斩！</div><button class="choice-btn" onclick="location.reload()">重新开始</button></div>`; }
+
+    function resistDecree() { 
+        document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊，满门抄斩！</div><button class="choice-btn" onclick="location.reload()">重新开始</button></div>`; 
+    }
 </script>
 </body>
 </html>
-
-
