@@ -2,8 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>深宫华章 - 修复版</title>
+    <title>深宫华章 - 悬念版</title>
     <style>
+        /* 样式保持一致 */
         :root { --palace-red: #8b1b1b; --gold: #c5a059; --paper: #f4f1de; --ink: #2c2c2c; --success-bg: #fffafa; }
         body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         #game-container { width: 95%; max-width: 450px; height: 90vh; background: var(--paper) url('https://www.transparenttextures.com/patterns/paper-fibers.png'); border: 8px solid var(--palace-red); outline: 2px solid var(--gold); outline-offset: -5px; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
@@ -21,7 +22,6 @@
         .hidden { display: none !important; }
         input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 70%; padding: 10px; font-size: 1.2rem; text-align: center; margin: 30px 0; outline: none; font-family: "STKaiti", serif; }
         #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:var(--paper); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-        
         .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 30px; text-align: center; }
         .dead-card { border: 4px solid #600; background: #1a0000; color: #ff4d4d; padding: 30px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
     </style>
@@ -46,7 +46,7 @@
         </div>
         <div id="page-identity" class="hidden">
             <div id="identity-content">
-                <div class="message" style="text-align: center;">选秀呈报，资料如下：</div>
+                <div class="message" style="text-align: center;" id="era-intro"></div>
                 <div style="border: 2px solid var(--palace-red); padding: 20px; background: #fffafa; text-align: center; margin-bottom: 20px;">
                     <h2 id="display-rank" style="color: var(--palace-red); margin: 0;"></h2>
                     <div id="display-stats" style="margin-top: 15px; text-align: left; display: inline-block; line-height: 2;"></div>
@@ -64,12 +64,21 @@
 
 <script>
     const CSV_URL = 'https://raw.githubusercontent.com/brorobooo/palace-game/main/plot.csv';
-    [cite_start]// 新增：p对象中加入了子嗣记录和怀孕计时器 [cite: 1]
+    
+    // 10个随机原创年号
+    let eraNames = ["昭景", "永宁", "盛平", "元禧", "嘉佑", "靖和", "天授", "承德", "景朔", "万宁"];
+    let emperor = {
+        eraName: "",
+        currentYear: 0,
+        deathYear: 0 // 这个数字在逻辑中使用，但永远不显示给玩家
+    };
+
     let p = { 
         name: "", rank: "", year: 1, quarter: 1, stats: {}, 
-        children: { male: 0, female: 0 }, // 0男 0女 格式
-        pregTimer: -1 // -1表示未怀孕，0-3表示进度
+        children: { male: 0, female: 0 },
+        pregTimer: -1 
     };
+    
     let plotLibrary = [];
     let usedPlotIds = new Set(); 
 
@@ -80,7 +89,7 @@
             const text = new TextDecoder('utf-8').decode(buffer);
             parseCSV(text);
             document.getElementById('loading-overlay').classList.add('hidden');
-        } catch (err) { document.getElementById('load-status').innerText = "加载失败，请检查CSV"; }
+        } catch (err) { document.getElementById('load-status').innerText = "加载失败"; }
     };
 
     function parseCSV(text) {
@@ -107,7 +116,6 @@
                         newRank: cols[29] ? cols[29].trim() : ""
                     }
                 ],
-                [cite_start]// 新增：读取CSV最后一列“侍寝”判定 [cite: 1]
                 isBed: cols[30] ? cols[30].trim() : "0" 
             };
         }).filter(i => i);
@@ -117,14 +125,23 @@
         const nameInput = document.getElementById('p-name').value;
         if (!nameInput) return alert("请赐名");
         p.name = nameInput;
+
+        // 初始化皇帝：只显示当前，隐藏未来
+        emperor.eraName = eraNames[Math.floor(Math.random() * eraNames.length)];
+        emperor.currentYear = rnd(1, 20); 
+        emperor.deathYear = rnd(30, 35); 
+
         const ranks = ["宫女", "答应", "贵人"];
         p.rank = ranks[Math.floor(Math.random() * 3)]; 
         const base = { "宫女":[20,40], "答应":[35,55], "贵人":[50,70] }[p.rank];
-        let initFavor = p.rank === "宫女" ? 0 : rnd(1, 10);
-        p.stats = { beauty: rnd(base[0],base[1]), talent: rnd(base[0],base[1]), wit: rnd(base[0],base[1]), body: rnd(40,60), prestige: rnd(5,15), favor: initFavor };
+        p.stats = { beauty: rnd(base[0],base[1]), talent: rnd(base[0],base[1]), wit: rnd(base[0],base[1]), body: rnd(40,60), prestige: rnd(5,15), favor: p.rank === "宫女" ? 0 : rnd(1, 10) };
         
         document.getElementById('page-start').classList.add('hidden');
         document.getElementById('page-identity').classList.remove('hidden');
+        
+        // 此处只介绍时代，绝不透露 deathYear
+        document.getElementById('era-intro').innerHTML = `当今圣上年号<b>【${emperor.eraName}】</b>，已在位<b>${emperor.currentYear}</b>载。<br>如今天下太平，正是选秀入宫的好时机。`;
+        
         document.getElementById('display-rank').innerText = `${p.name} · ${p.rank}`;
         document.getElementById('display-stats').innerHTML = `容貌：${p.stats.beauty} &nbsp; 才情：${p.stats.talent}<br>心机：${p.stats.wit} &nbsp; 体质：${p.stats.body}<br>声望：${p.stats.prestige} &nbsp; 圣宠：${p.stats.favor}`;
     }
@@ -140,52 +157,34 @@
         showPlot();
     }
 
-    function resistDecree() {
-        document.getElementById('identity-content').innerHTML = `
-            <div class="dead-card">
-                <h2 style="letter-spacing: 5px;">雷霆之怒</h2>
-                <div style="line-height:1.8; margin:20px 0;">大胆 ${p.name}！圣旨已下竟然抗旨不尊？<br>皇上龙颜大怒，下旨将你满门抄斩，诛九族！</div>
-                <button class="choice-btn" style="width:100%; background:#400; color:#fff; border:none;" onclick="location.reload()">叩首谢罪（重新开始）</button>
-            </div>`;
-    }
-
     function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
 
-    [cite_start]// 修改：更新档籍面板，加入子嗣和怀孕状态显示 [cite: 1]
     function updateStatPanel() {
         let childrenText = `${p.children.male}男 ${p.children.female}女`;
         let statusText = p.pregTimer >= 0 ? `<span style="color:#ffb700">怀有身孕</span>` : "常态";
 
+        // 这里的显示面板也只显示当前在位年份
         document.getElementById('stat-content').innerHTML = `
+            <div class="stat-row">年号：${emperor.eraName} ${emperor.currentYear}年</div>
             <div class="stat-row">位份：${p.rank}</div>
-            <div class="stat-row">时间：第${p.year}年 季${p.quarter}</div>
             <div class="stat-row">子嗣：<span style="color:#c5a059">${childrenText}</span></div>
             <div class="stat-row">状态：${statusText}</div>
+            <div class="stat-row">入宫时间：第${p.year}年 季${p.quarter}</div>
             <div class="stat-row">圣宠：<span style="color:#ff4d4d">${p.stats.favor}</span></div>
             <div class="stat-row">声望：${p.stats.prestige}</div>
-            <div class="stat-row">容貌：${p.stats.beauty}</div>
-            <div class="stat-row">才情：${p.stats.talent}</div>
-            <div class="stat-row">心机：${p.stats.wit}</div>
             <div class="stat-row">体质：${p.stats.body}</div>
         `;
     }
 
-    [cite_start]// 新增：怀孕及生产判定逻辑 [cite: 1]
+    // 怀孕逻辑保持不变
     function checkPregnancyProgress() {
         if (p.pregTimer === -1) return;
         p.pregTimer++;
-        if (p.pregTimer >= 3) { // 三个剧情后生产
-            giveBirth();
-        }
+        if (p.pregTimer >= 3) { giveBirth(); }
     }
 
     function handlePregnancy() {
-        // 如果已经怀孕，则不重复判定
-        if (p.pregTimer >= 0) {
-            alert("【提示】你昨夜侍奉圣驾，皇上对你温存有加。");
-            return;
-        }
-        // 根据体质判定几率
+        if (p.pregTimer >= 0) { alert("【提示】你昨夜侍奉圣驾，皇上对你温存有加。"); return; }
         let chance = p.stats.body > 70 ? 0.5 : 0.2;
         if (Math.random() < chance) {
             p.pregTimer = 0;
@@ -198,40 +197,32 @@
 
     function giveBirth() {
         let roll = Math.random();
-        let resultText = "";
-        if (roll < 0.05) { // 双胞胎几率
-            p.children.male += 1; p.children.female += 1;
-            resultText = "竟然是一对龙凤双胞胎！";
-        } else if (roll < 0.5) {
-            p.children.male += 1;
-            resultText = "是一位健壮的皇子！";
-        } else {
-            p.children.female += 1;
-            resultText = "是一位可爱的公主！";
-        }
+        let resultText = (roll < 0.05) ? (p.children.male++, p.children.female++, "竟然是一对龙凤双胞胎！") : 
+                         (roll < 0.5) ? (p.children.male++, "是一位健壮的皇子！") : 
+                         (p.children.female++, "是一位可爱的公主！");
         alert(`【生产】经过十月怀胎，你终于分娩了。${resultText}`);
-        p.pregTimer = -1; // 重置状态
+        p.pregTimer = -1;
         updateStatPanel();
     }
 
     function showPlot() {
-        [cite_start]// 每次开始新剧情前检查怀孕进度 [cite: 1]
         checkPregnancyProgress();
 
+        // 秘密判定皇帝驾崩：玩家并不知道何时触发
+        if (emperor.currentYear >= emperor.deathYear) {
+            showEnding("国丧大行", `【${emperor.eraName} ${emperor.currentYear}年】<br>钟声长鸣，举国哀恸。圣上突然驾崩了。<br>作为后宫嫔妃，你被迫在感业寺出家，为先帝祈福。那深宫中的红墙绿瓦，终成过往云烟。`);
+            return;
+        }
+
         if (p.rank === "宫女" && p.year >= 6) {
-            showEnding("出宫恩典", "入宫五载，你依旧只是个卑微的宫女。如今青春已逝，嬷嬷按例将你放出宫去。回到家后，父母为你寻了一户踏实人家，你从此洗尽铅华，过上了平淡的一生。");
+            showEnding("出宫恩典", "入宫五载，你依旧只是个卑微的宫女。如今青春已逝，按例被放出宫去。");
             return;
         }
 
         let candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year && !usedPlotIds.has(item.id));
-        if (candidates.length === 0) {
-            usedPlotIds.clear(); 
-            candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year);
-        }
-        let s = candidates[Math.floor(Math.random() * candidates.length)];
-        
-        if (!s) s = { title: "深宫独处", text: "这一季宫中无事。", choices: [{ text: "继续", resOk: "岁月静好。", stats: {} }] };
-        else usedPlotIds.add(s.id);
+        if (candidates.length === 0) { usedPlotIds.clear(); candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year); }
+        let s = candidates[Math.floor(Math.random() * candidates.length)] || { title: "深宫独处", text: "这一季宫中无事。", choices: [{ text: "继续", resOk: "岁月静好。", stats: {} }] };
+        usedPlotIds.add(s.id);
 
         document.getElementById('story-text').innerHTML = `<strong>【${s.title}】</strong><br>${s.text}`;
         const area = document.getElementById('choices-area'); area.innerHTML = "";
@@ -243,24 +234,18 @@
                 let pass = true;
                 if(c.checkAttr && c.checkAttr !== "无") {
                     const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
-                    let key = attrKeyMap[c.checkAttr] || c.checkAttr;
-                    if(p.stats[key] < c.checkVal) pass = false;
+                    if(p.stats[attrKeyMap[c.checkAttr] || c.checkAttr] < c.checkVal) pass = false;
                 }
                 
                 if(pass) {
                     for(let k in c.stats) p.stats[k] += (c.stats[k] || 0);
-                    
-                    [cite_start]// 新增：判断该剧情是否触发侍寝 [cite: 1]
-                    if (s.isBed === "1") {
-                        handlePregnancy();
-                    }
-
-                    if (c.newRank === "结局") {
-                        showEnding("尘埃落定", c.resOk);
-                        return;
-                    }
+                    if (s.isBed === "1") handlePregnancy();
+                    if (c.newRank === "结局") { showEnding("尘埃落定", c.resOk); return; }
                     if(c.newRank && c.newRank !== "") p.rank = c.newRank;
-                    p.quarter++; if(p.quarter>4){p.quarter=1; p.year++;}
+                    
+                    p.quarter++; 
+                    if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
+                    
                     updateStatPanel();
                     document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
                     area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">继续</button>`;
@@ -277,8 +262,6 @@
             <div class="end-card">
                 <h2 style="color:var(--palace-red); letter-spacing: 5px;">${title}</h2>
                 <div style="line-height:1.8; margin:20px 0; color:var(--ink);">${msg}</div>
-                <hr style="border:0; border-top:1px solid var(--gold); margin:20px 0;">
-                <p style="font-size:0.9rem; color:var(--gold);">—— 历经风霜，终得正果 ——</p>
                 <button class="choice-btn" style="width:100%; margin-top:20px;" onclick="location.reload()">再入轮回</button>
             </div>`;
     }
@@ -288,11 +271,11 @@
             <div class="dead-card">
                 <h2 style="letter-spacing: 5px;">魂断深宫</h2>
                 <div style="line-height:1.8; margin:20px 0;">${res}</div>
-                <hr style="border:0; border-top:1px solid #600; margin:20px 0;">
-                <p style="font-size:0.9rem; color:#888;">半生经营，皆成泡影</p>
                 <button class="choice-btn" style="width:100%; margin-top:20px; background:#400; color:#fff; border:none;" onclick="location.reload()">重新开始</button>
             </div>`;
-        document.getElementById('menu-trigger').classList.add('hidden');
+    }
+    function resistDecree() {
+        document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊，满门抄斩！</div><button class="choice-btn" onclick="location.reload()">叩首谢罪</button></div>`;
     }
 </script>
 </body>
