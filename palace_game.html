@@ -365,28 +365,28 @@ input[type="text"] {
     }
 
     // --- 万能属性解析逻辑 ---
-    function applyEffect(effectStr) {
-        if (!effectStr || effectStr === "无") return;
-        if (effectStr === "死亡") { gameOver("深宫诡谲难测，一朝命陨红墙，徒留一声叹息。"); return "DEAD"; }
-        
-        const attrMap = {"容貌":"beauty", "心机":"wit", "体质":"body", "才情":"talent", "声望":"prestige", "圣宠":"favor"};
-        effectStr.split(';').forEach(change => {
-            let match = change.match(/([\u4e00-\u9fa5]+)([+-]\d+)/);
-            if (match) {
-                let attrName = attrMap[match[1]];
-                if (attrName) p.stats[attrName] += parseInt(match[2]);
-            }
-        });
-        // --- 新增：体质判断逻辑 ---
-        if (p.stats.body <= 0) {
-            p.stats.body = 0; // 归零显示
-            updateStatPanel();
-            gameOver("油尽灯枯", "你长年累月身处深宫，终究是耗尽了心力，撒手人寰。"); 
-            return "DEAD";
-        }
-        // -----------------------
-        updateStatPanel();
+    function applyEffect(effectStr, failText) { // 增加 failText 参数
+    if (!effectStr || effectStr === "无") return null;
+    // 如果是直接死亡剧情
+    if (effectStr.includes("死亡")) {
+        return { isDead: true, reason: failText || "深宫诡谲难测，一朝命陨红墙，徒留一声叹息。" };
     }
+    const attrMap = {"容貌":"beauty", "心机":"wit", "体情":"talent", "体质":"body", "声望":"prestige", "圣宠":"favor"};
+    effectStr.split(';').forEach(change => {
+        let match = change.match(/([\u4e00-\u9fa5]+)([+-]\d+)/);
+        if (match) {
+            let attrName = attrMap[match[1]];
+            if (attrName) p.stats[attrName] += parseInt(match[2]);
+        }
+    });
+    // 检查体质是否耗尽
+    if (p.stats.body <= 0) {
+        p.stats.body = 0;
+        return { isDead: true, reason: "你长年累月身处深宫，终究是耗尽了心力，撒手人寰。" };
+    }
+    updateStatPanel();
+    return null;
+}
 
     function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
@@ -613,6 +613,7 @@ function showEnding(title, msg) {
 </script>
 </body>
 </html>
+
 
 
 
