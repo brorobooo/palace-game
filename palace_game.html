@@ -10,7 +10,6 @@
         header { background: var(--palace-red); color: var(--gold); padding: 15px 0; text-align: center; font-size: 1.4rem; letter-spacing: 4px; border-bottom: 4px double var(--gold); z-index: 5; font-weight: bold; }
         #scene { flex-grow: 1; padding: 25px; display: flex; flex-direction: column; z-index: 4; overflow-y: auto; }
         
-        /* 侧边栏档籍系统 */
         #stat-panel { position: absolute; right: -100%; top: 0; width: 80%; height: 100%; background: rgba(30, 30, 30, 0.98); color: #ddd; transition: right 0.4s ease; z-index: 100; padding: 40px 20px; box-sizing: border-box; border-left: 3px solid var(--gold); display: none; overflow-y: auto; }
         #stat-panel.active { display: block; }
         #stat-panel.open { right: 0; }
@@ -72,14 +71,23 @@
 </div>
 
 <script>
-    const CSV_URL = 'https://raw.githubusercontent.com/brorobooo/palace-game/main/plot.csv';
+    // --- 路径配置 ---
+    const BASE_URL = 'https://raw.githubusercontent.com/brorobooo/palace-game/main/';
+    const RANK_FILES = {
+        "宫女": "story_maid.csv",
+        "答应": "story_lady.csv",
+        "贵人": "story_noble.csv",
+        "妃": "story_consort.csv",
+        "贵妃": "story_noble_consort.csv",
+        "皇后": "story_empress.csv"
+    };
+
     let eraNames = ["昭景", "永宁", "盛平", "元禧", "嘉佑", "靖和", "天授", "承德", "景朔", "万宁"];
     let emperor = { eraName: "", currentYear: 0, deathYear: 0 };
     let p = { name: "", rank: "", year: 1, quarter: 1, stats: {}, children: { male: 0, female: 0 }, pregTimer: -1 };
-    let plotLibrary = [];
+    let currentPool = [];
     let usedPlotIds = new Set(); 
 
-    // --- 结局数据库 ---
     const ENDING_DB = {
         "答应": { 
             son: [
@@ -123,33 +131,46 @@
         }
     };
 
-    // --- 核心逻辑 ---
-    window.onload = async function() {
-        try {
-            const response = await fetch(CSV_URL);
-            const buffer = await response.arrayBuffer();
-            const text = new TextDecoder('utf-8').decode(buffer);
-            parseCSV(text);
-            document.getElementById('loading-overlay').classList.add('hidden');
-        } catch (err) { document.getElementById('load-status').innerText = "加载失败，请检查网络"; }
+    window.onload = function() {
+        document.getElementById('loading-overlay').classList.add('hidden');
     };
 
-    function parseCSV(text) {
-        const rows = text.split(/\r?\n/).filter(line => line.trim() !== "");
-        const dataRows = rows.slice(1); 
-        plotLibrary = dataRows.map(row => {
-            const cols = row.split(',');
-            if (cols.length < 28) return null; 
-            return {
-                id: cols[0].trim(), rank: cols[1].trim(), year: parseInt(cols[2]),
-                title: cols[4], text: cols[5],
-                choices: [
-                    { text: cols[6], checkAttr: cols[7].trim(), checkVal: parseInt(cols[8]), resOk: cols[9], resFail: cols[10], stats: { beauty: +cols[11], talent: +cols[12], wit: +cols[13], body: +cols[14], prestige: +cols[15], favor: +cols[16] }, newRank: cols[17].trim() },
-                    { text: cols[18], checkAttr: cols[19].trim(), checkVal: parseInt(cols[20]), resOk: cols[21], resFail: cols[22], stats: { beauty: +cols[23], talent: +cols[24], wit: +cols[25], body: +cols[26], prestige: +cols[27], favor: +cols[28] || 0 }, newRank: cols[29] ? cols[29].trim() : "" }
-                ],
-                isBed: cols[30] ? cols[30].trim() : "0" 
-            };
-        }).filter(i => i);
+    // --- 动态加载位分剧情库 ---
+    async function loadRankStory(rank) {
+        const fileName = RANK_FILES[rank];
+        try {
+            const response = await fetch(BASE_URL + fileName);
+            const buffer = await response.arrayBuffer();
+            const text = new TextDecoder('utf-8').decode(buffer);
+            const rows = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            currentPool = rows.slice(1).map(row => {
+                const cols = row.split(',');
+                return {
+                    id: cols[0], type: cols[1], title: cols[2], text: cols[3],
+                    choices: [
+                        { text: cols[4], attr: cols[5], val: parseInt(cols[6]), sText: cols[7], sEff: cols[8], fText: cols[9], fEff: cols[10] },
+                        { text: cols[11], attr: cols[12], val: parseInt(cols[13]), sText: cols[14], sEff: cols[15], fText: cols[16], fEff: cols[17] }
+                    ],
+                    isBed: cols[18] ? cols[18].trim() : "0"
+                };
+            });
+        } catch (err) { console.error("加载剧情库失败:", err); }
+    }
+
+    // --- 万能属性解析逻辑 ---
+    function applyEffect(effectStr) {
+        if (!effectStr || effectStr === "无") return;
+        if (effectStr === "死亡") { gameOver("红颜命薄，魂断深宫。"); return "DEAD"; }
+        
+        const attrMap = {"容貌":"beauty", "心机":"wit", "体质":"body", "才情":"talent", "声望":"prestige", "圣宠":"favor"};
+        effectStr.split(';').forEach(change => {
+            let match = change.match(/([\u4e00-\u9fa5]+)([+-]\d+)/);
+            if (match) {
+                let attrName = attrMap[match[1]];
+                if (attrName) p.stats[attrName] += parseInt(match[2]);
+            }
+        });
+        updateStatPanel();
     }
 
     function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -160,7 +181,7 @@
         p.name = nameInput;
         emperor.eraName = eraNames[Math.floor(Math.random() * eraNames.length)];
         emperor.currentYear = rnd(1, 20); 
-        emperor.deathYear = rnd(30, 35); 
+        emperor.deathYear = emperor.currentYear + rnd(15, 25); 
         const ranks = ["宫女", "答应", "贵人"];
         p.rank = ranks[Math.floor(Math.random() * 3)]; 
         const base = { "宫女":[20,40], "答应":[35,55], "贵人":[50,70] }[p.rank];
@@ -173,7 +194,8 @@
         document.getElementById('display-stats-preview').innerHTML = `容貌：${p.stats.beauty} &nbsp; 才情：${p.stats.talent}<br>心机：${p.stats.wit} &nbsp; 体质：${p.stats.body}<br>声望：${p.stats.prestige} &nbsp; 圣宠：${p.stats.favor}`;
     }
 
-    function enterPalace() {
+    async function enterPalace() {
+        await loadRankStory(p.rank);
         document.getElementById('page-identity').classList.add('hidden');
         document.getElementById('page-game').classList.remove('hidden');
         document.getElementById('menu-trigger').classList.remove('hidden');
@@ -190,7 +212,7 @@
             <div class="stat-group">
                 <h4>宫廷背景</h4>
                 <div class="stat-row"><span>年号</span><span class="stat-val">${emperor.eraName} ${emperor.currentYear}年</span></div>
-                <div class="stat-row"><span>入宫</span><span class="stat-val">第${p.year}年 ${p.quarter}季</span></div>
+                <div class="stat-row"><span>入宫</span><span class="stat-val">第${p.year}年 第${p.quarter}季</span></div>
             </div>
             <div class="stat-group">
                 <h4>个人状态</h4>
@@ -213,7 +235,6 @@
         if (p.pregTimer >= 0) return;
         let chance = p.stats.body > 70 ? 0.5 : 0.2;
         if (Math.random() < chance) { p.pregTimer = 0; alert("【喜讯】龙脉有续，你已怀有龙裔！"); }
-        else { alert("【消息】侍寝恩重，皇上对你关怀备至。"); }
         updateStatPanel();
     }
 
@@ -229,31 +250,26 @@
     function getDeathEnding() {
         if (p.rank === "宫女") return { title: "重获自由", text: "皇上驾崩，你作为卑微宫女被遣散出宫，重获自由。" };
         let pool = ENDING_DB[p.rank] || ENDING_DB["答应"];
-        let outcomes = [];
-        let extraMsg = ""; 
-
-        if (p.children.male > 0 && p.children.female > 0) {
-            extraMsg = "<span style='color:#c5a059'><b>【龙凤呈祥】</b>你膝下既有皇子支撑门庭，又有公主承欢膝下，福泽深厚。</span><br><br>";
-        }
-
-        if (p.children.male > 0) outcomes = pool.son;
-        else if (p.children.female > 0) outcomes = pool.daughter;
-        else outcomes = pool.none;
-
+        let outcomes = p.children.male > 0 ? pool.son : (p.children.female > 0 ? pool.daughter : pool.none);
         let result = outcomes[Math.floor(Math.random() * outcomes.length)];
-        return { title: result.title, text: extraMsg + result.text };
+        return { title: result.title, text: result.text };
     }
 
-function showPlot() {
+    async function showPlot() {
         if (p.pregTimer >= 0) { p.pregTimer++; if (p.pregTimer >= 3) giveBirth(); }
         if (emperor.currentYear >= emperor.deathYear) { 
             let end = getDeathEnding();
             showEnding(end.title, end.text); return; 
         }
 
-        let candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year && !usedPlotIds.has(item.id));
-        if (candidates.length === 0) { usedPlotIds.clear(); candidates = plotLibrary.filter(item => item.rank === p.rank && item.year === p.year); }
-        let s = candidates[Math.floor(Math.random() * candidates.length)] || { title: "深宫独处", text: "这一季宫中无事。", choices: [{ text: "继续", resOk: "岁月静好。", stats: {} }] };
+        // 修改1: 宫女出宫年限改为10年
+        if (p.rank === "宫女" && p.year > 10) {
+            showEnding("重获自由", "你在宫中服役十载，终获恩典遣散出宫。"); return;
+        }
+
+        let available = currentPool.filter(s => !usedPlotIds.has(s.id));
+        if (available.length === 0) { usedPlotIds.clear(); available = currentPool; }
+        let s = available[Math.floor(Math.random() * available.length)];
         usedPlotIds.add(s.id);
 
         document.getElementById('story-text').innerHTML = `<strong>【${s.title}】</strong><br>${s.text}`;
@@ -262,48 +278,38 @@ function showPlot() {
         s.choices.forEach(c => {
             if(!c.text) return;
             let btn = document.createElement('button'); btn.className = "choice-btn"; btn.innerText = c.text;
-            btn.onclick = () => {
-                let pass = true;
+            btn.onclick = async () => {
                 const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
-                if(c.checkAttr && c.checkAttr !== "无" && p.stats[attrKeyMap[c.checkAttr] || c.checkAttr] < c.checkVal) pass = false;
+                let pass = (c.attr === "无" || p.stats[attrKeyMap[c.attr]] >= c.val);
                 
-                if(pass) {
-                    // 1. 基础属性加减
-                    for(let k in c.stats) if(p.stats[k] !== undefined) p.stats[k] += (c.stats[k] || 0);
-                    
-                    // 2. 侍寝/怀孕判定
-                    if (s.isBed === "1") handlePregnancy();
+                let resultText = pass ? c.sText : c.fText;
+                let effectStatus = applyEffect(pass ? c.sEff : c.fEff);
+                if(effectStatus === "DEAD") return;
 
-                    // --- 核心修改：圣宠晋升判定 ---
-                    let promotionMsg = "";
-                    if(c.newRank && c.newRank !== "" && c.newRank !== "无" && c.newRank !== "结局") {
-                        // 定义门槛
-                        const rankReq = { "答应": 50, "贵人": 120, "妃": 400, "贵妃": 1000, "皇后": 2500 };
-                        let need = rankReq[c.newRank] || 0;
+                if (pass && s.isBed === "1") handlePregnancy();
 
-                        if (p.stats.favor >= need) {
-                            p.rank = c.newRank;
-                            p.year = 1;    // 晋升后重置年份
-                            p.quarter = 1; // 晋升后重置季度
-                            promotionMsg = `<br><b style="color:#8b1b1b">【晋升】圣宠达标，你已被册封为${c.newRank}！</b>`;
-                        } else {
-                            promotionMsg = `<br><i style="color:#777">（虽立功劳，但圣宠不足${p.stats.favor}/${need}，暂未封位）</i>`;
-                        }
-                    }
-                    // --- 修改结束 ---
-
-                    // 3. 推进时间（如果没有晋升重置，则正常推进）
-                    if (promotionMsg.indexOf("【晋升】") === -1) {
-                        p.quarter++; 
-                        if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
-                    }
-
-                    updateStatPanel();
-                    document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}${promotionMsg}</div>`;
-                    area.innerHTML = `<button class="choice-btn" onclick="showPlot()">继续</button>`;
-                } else {
-                    gameOver(c.resFail || "你未能通过考验，惨死宫中。");
+                // 修改2: 圣宠晋升判定逻辑 (答应门槛调至100)
+                let promotionMsg = "";
+                const rankOrder = ["宫女", "答应", "贵人", "妃", "贵妃", "皇后"];
+                const rankReq = { "答应": 100, "贵人": 200, "妃": 500, "贵妃": 1000, "皇后": 2500 };
+                let nextRank = rankOrder[rankOrder.indexOf(p.rank) + 1];
+                
+                if (nextRank && p.stats.favor >= rankReq[nextRank]) {
+                    p.rank = nextRank;
+                    p.year = 1; p.quarter = 1;
+                    usedPlotIds.clear();
+                    await loadRankStory(p.rank);
+                    promotionMsg = `<br><b style="color:#8b1b1b">【晋升】圣宠达标，你已被册封为${p.rank}！</b>`;
                 }
+
+                if (!promotionMsg.includes("【晋升】")) {
+                    p.quarter++; 
+                    if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
+                }
+
+                updateStatPanel();
+                document.getElementById('story-text').innerHTML = `<div class="message">${resultText}${promotionMsg}</div>`;
+                area.innerHTML = `<button class="choice-btn" onclick="showPlot()">继续</button>`;
             };
             area.appendChild(btn);
         });
@@ -318,13 +324,8 @@ function showPlot() {
     }
 
     function resistDecree() { 
-        document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊是大罪，你被赐下一尺白绫，家中满门亦受牵连。</div><button class="choice-btn" onclick="location.reload()">重新开始</button></div>`; 
+        document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊是大罪，你被赐下一尺白绫。</div><button class="choice-btn" onclick="location.reload()">重新开始</button></div>`; 
     }
 </script>
 </body>
 </html>
-
-
-
-
-
