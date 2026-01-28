@@ -403,7 +403,12 @@ input[type="text"] {
         showPlot();
     }
 
-    function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
+    // 简单的切换函数
+function toggleStats() {
+    playClick(); // 播放你想要的点击音效
+    const panel = document.getElementById('stat-panel');
+    panel.classList.toggle('open');
+}
 
     function updateStatPanel() {
         let status = p.pregTimer >= 0 ? "<span style='color:#ffb700'>怀有龙嗣</span>" : "平常";
@@ -581,6 +586,7 @@ async function loadGame() {
 </script>
 </body>
 </html>
+
 
 
 
