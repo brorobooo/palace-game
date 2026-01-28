@@ -135,20 +135,21 @@ input[type="text"] {
 /* 修改卷轴：默认完全躲在右侧屏幕外 */
 #stat-panel { 
     position: absolute; 
-    right: -110%; /* 关键：初始位置在屏幕外 */
+    right: -110%; 
     top: 0; 
     width: 85%; 
     height: 100%; 
-    background: rgba(30, 30, 30, 0.98); 
+    background: rgba(20, 20, 20, 0.95); /* 更深沉的底色 */
     color: #ddd; 
-    transition: right 0.4s ease-in-out; 
-    z-index: 100; 
-    padding: 40px 20px; 
+    transition: right 0.4s ease; 
+    z-index: 1000; 
+    padding: 20px 15px; /* 缩小内边距 */
     box-sizing: border-box; 
-    border-left: 3px solid var(--gold); 
+    border-left: 2px solid var(--gold); 
     overflow-y: auto;
 }
-
+#stat-panel h3 { color: var(--gold); margin: 0 0 15px 0; border-bottom: 1px solid var(--gold); padding-bottom: 5px; }
+#stat-panel h4 { color: var(--gold); margin: 10px 0 5px 0; font-size: 0.95rem; }
 /* 展开状态 */
 #stat-panel.open { 
     right: 0; 
@@ -175,16 +176,31 @@ input[type="text"] {
 
 .hidden { display: none !important; }
 
-.stat-group {
-    border: 0.1rem solid var(--gold);
-    padding: 0.6rem;
-    margin-bottom: 0.6rem;
+.stat-group { 
+    background: rgba(255,255,255,0.05); 
+    padding: 8px 12px; 
+    margin-bottom: 10px; 
+    border-radius: 4px;
 }
 
 .stat-row {
     display: flex;
     justify-content: space-between;
     font-size: 0.85rem;
+}
+    /* 音量调节：对齐排版 */
+.volume-ctrl { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    gap: 10px; 
+    margin: 5px 0;
+}
+.volume-ctrl label { font-size: 0.85rem; color: #bbb; white-space: nowrap; width: 50px; }
+.volume-ctrl input[type="range"] { 
+    flex: 1; 
+    height: 4px;
+    accent-color: var(--gold);
 }
 
 /* ===== Mobile ===== */
@@ -597,6 +613,7 @@ async function loadGame() {
 </script>
 </body>
 </html>
+
 
 
 
