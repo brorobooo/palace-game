@@ -173,6 +173,14 @@
                 if (attrName) p.stats[attrName] += parseInt(match[2]);
             }
         });
+        // --- 新增：体质判断逻辑 ---
+        if (p.stats.body <= 0) {
+            p.stats.body = 0; // 归零显示
+            updateStatPanel();
+            gameOver("油尽灯枯", "你长年累月身处深宫，终究是耗尽了心力，撒手人寰。"); 
+            return "DEAD";
+        }
+        // -----------------------
         updateStatPanel();
     }
 
@@ -343,6 +351,7 @@
 </script>
 </body>
 </html>
+
 
 
 
