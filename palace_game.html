@@ -2,9 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>深宫华章 - 悬念版</title>
+    <title>深宫华章 - 终极命运版</title>
     <style>
-        /* 样式保持一致 */
         :root { --palace-red: #8b1b1b; --gold: #c5a059; --paper: #f4f1de; --ink: #2c2c2c; --success-bg: #fffafa; }
         body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: "STKaiti", "KaiTi", serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         #game-container { width: 95%; max-width: 450px; height: 90vh; background: var(--paper) url('https://www.transparenttextures.com/patterns/paper-fibers.png'); border: 8px solid var(--palace-red); outline: 2px solid var(--gold); outline-offset: -5px; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
@@ -22,14 +21,14 @@
         .hidden { display: none !important; }
         input[type="text"] { background: transparent; border: none; border-bottom: 2px solid var(--palace-red); width: 70%; padding: 10px; font-size: 1.2rem; text-align: center; margin: 30px 0; outline: none; font-family: "STKaiti", serif; }
         #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:var(--paper); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-        .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 30px; text-align: center; }
+        .end-card { border: 4px double var(--gold); background: var(--success-bg); padding: 30px; text-align: center; min-height: 70%; display: flex; flex-direction: column; justify-content: center; }
         .dead-card { border: 4px solid #600; background: #1a0000; color: #ff4d4d; padding: 30px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="loading-overlay"><div id="load-status" style="font-size: 1.2rem; color: var(--palace-red);">正在整理卷宗...</div></div>
+    <div id="loading-overlay"><div id="load-status">正在加载宫廷卷宗...</div></div>
     <header>深宫华章</header>
     <div id="stat-panel">
         <h2 style="text-align:center; letter-spacing: 5px; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">个人档籍</h2>
@@ -64,23 +63,77 @@
 
 <script>
     const CSV_URL = 'https://raw.githubusercontent.com/brorobooo/palace-game/main/plot.csv';
-    
-    // 10个随机原创年号
     let eraNames = ["昭景", "永宁", "盛平", "元禧", "嘉佑", "靖和", "天授", "承德", "景朔", "万宁"];
-    let emperor = {
-        eraName: "",
-        currentYear: 0,
-        deathYear: 0 // 这个数字在逻辑中使用，但永远不显示给玩家
-    };
-
-    let p = { 
-        name: "", rank: "", year: 1, quarter: 1, stats: {}, 
-        children: { male: 0, female: 0 },
-        pregTimer: -1 
-    };
-    
+    let emperor = { eraName: "", currentYear: 0, deathYear: 0 };
+    let p = { name: "", rank: "", year: 1, quarter: 1, stats: {}, children: { male: 0, female: 0 }, pregTimer: -1 };
     let plotLibrary = [];
     let usedPlotIds = new Set(); 
+
+    // --- 结局数据库集成 ---
+    const ENDING_DB = {
+        "答应": {
+            son: [
+                { title: "寄子余生版", text: "先帝驾崩，新帝登基。你位份低微，无缘前往皇子封地。新帝念及兄弟情分，将你安置在皇家别苑，衣食无忧却终生不得踏出苑门。你将所有希望寄托在皇子身上，余生在思念与期盼中度过。" },
+                { title: "封地伴驾版", text: "你的皇子受封郡王，得以前往封地就藩。你随子前往封地，成为王府太妃。远离宫廷纷争，不必再看他人脸色，虽无无上权势，却拥有了寻常妇人的安稳，安享晚年。" },
+                { title: "幼子早夭版", text: "先帝骤崩，你年幼的皇子受惊染病，不久便夭折。失去唯一的依靠，你被遗忘在冷宫偏殿。无人问津，粗茶淡饭，在无尽的孤寂与悲痛中，潦草走完一生。" }
+            ],
+            none: [
+                { title: "守陵终老版", text: "作为无宠无嗣的低位嫔妃，你被新帝安排前往皇家陵寝，为先帝守陵。青灯古佛，黄土孤冢，此生与繁华宫廷彻底隔绝，在清冷与孤寂中耗尽余生。" },
+                { title: "出宫归家版", text: "新帝登基后推行仁政，大赦后宫。你家族尚有亲人在世，得以被特许出宫，回归民间。褪去宫装，你隐于市井，嫁作凡人妇，过上了平淡的市井生活。" },
+                { title: "冷宫枯寂版", text: "你无宠无势，又无子嗣傍身，被随意安置在冷宫偏殿。宫中新人换旧人，再也无人记得你的存在，最终在无人知晓的日子里，悄然离世。" }
+            ]
+        },
+        "贵人": {
+            son: [
+                { title: "皇子成才版", text: "你的皇子天资聪颖，深得新帝信任，获封亲王。你被尊为皇太妃，迁居太妃府，享有丰厚俸禄与礼遇。皇子时常前来请安，你在尊崇与亲情中，安度富贵晚年。" },
+                { title: "夺嫡落败版", text: "你的皇子曾参与夺嫡，最终落败。新帝念及手足，将皇子贬为庶人。你被剥夺所有封号，禁足在偏僻宫殿，终生不得与皇子相见，在悔恨与绝望中苟活。" }
+            ],
+            daughter: [
+                { title: "公主和亲版", text: "你育有公主，新帝为稳固邦交，将公主送往和亲。你虽不舍，却无力反抗。新帝感念你的隐忍，加封位份让你居于安乐殿。你时常望着和亲的方向，余生在思念与荣耀中交织。" }
+            ],
+            none: [
+                { title: "佛堂清修版", text: "你主动请旨带发修行。远离宫廷的尔虞我诈，每日诵经礼佛。宫中会按时送来份例，你安然度过余生，死后以太妃之礼安葬。" },
+                { title: "依附权贵版", text: "你早年与某位贵妃交好，其子登基为帝。你凭借旧情得到新帝生母照拂，被安置在条件优渥的宫殿。虽无亲生骨肉，却能安稳度日，得以善终。" },
+                { title: "贬斥庶人版", text: "你曾参与宫斗得罪新帝生母。先帝驾崩后被清算，贬为庶人流落民间，晚景凄凉。" }
+            ]
+        },
+        "妃": {
+            son: [
+                { title: "辅政太妃版", text: "你的皇子是新帝的得力臂膀。你被册封为皇考贵妃，享有极高威仪。后宫之中除太后外，无人敢与你抗衡，成为后宫举足轻重的人物。" },
+                { title: "封地至尊版", text: "你的皇子受封亲王封地富庶。你前往封地成为最尊贵的太妃。皇子孝顺，你无需理会后宫纷争，尽享荣华富贵，寿终正寝。" },
+                { title: "母凭子悲版", text: "皇子遭奸人陷害被赐死。你被废黜封号禁足皇陵。余生都在为儿子祈福，在无尽的痛苦中离世。" }
+            ],
+            none: [
+                { title: "德高望重版", text: "你深受认可。虽无子嗣，新帝依旧尊你为皇太妃。你不参与后宫争斗，安享清福，成为后宫中受人敬重的长者。" },
+                { title: "家族荣光版", text: "你的家族权势稳固，新帝对你礼遇有加。你凭借家族势力在后宫拥有一席之地，安稳度过余生。" },
+                { title: "激流勇退版", text: "你看透沉浮，请旨前往皇家别院养老。你在别院种花种草，闲云野鹤，远离纷争，度过惬意的晚年。" }
+            ]
+        },
+        "贵妃": {
+            son: [
+                { title: "太后尊荣版", text: "你的儿子成功登基为新帝。你母凭子贵被尊为皇太后，入住慈宁宫。手握后宫大权，成为天下最尊贵的女人，权倾后宫。" },
+                { title: "叔嫂相安版", text: "你的皇子未能继位，新帝感念你的家族势力尊你为皇太妃。你携皇子前往封地，安稳度日，保全子嗣。" },
+                { title: "制衡朝堂版", text: "新帝年幼，你作为皇子生母联合朝臣辅政。虽无太后之名却有其实，成为王朝的关键人物，在权谋中周旋。" }
+            ],
+            none: [
+                { title: "摄政辅国版", text: "你家世显赫，被托付辅佐新帝。虽无子嗣却深得信任。你协助太后稳定后宫，成为一代贤妃，名留青史。" },
+                { title: "安享尊荣版", text: "你曾对新帝有抚育之恩。新帝登基后尊你为皇太妃，给予无上礼遇。你在宫中安享荣华，无人敢犯。" },
+                { title: "失势落寞版", text: "你与新帝生母曾势同水火。先帝驾崩后荣华尽失，被迁居偏僻宫殿，在落寞中度过余生。" }
+            ]
+        },
+        "皇后": {
+            son: [
+                { title: "圣母皇太后版", text: "你的嫡子顺利继位。你名正言顺尊为圣母皇太后，执掌后宫垂帘听政。辅佐新帝开创盛世，享尽哀荣。" },
+                { title: "嫡庶共治版", text: "新帝为你庶出之子，你依旧以嫡母身份尊为皇太后。凭借嫡母身份与多年势力，稳坐后宫头把交椅。" },
+                { title: "守国托孤版", text: "你的皇子年幼登基。你临危受命，稳定朝局压制权臣。一生为皇室基业操劳，成为一代贤后。" }
+            ],
+            none: [
+                { title: "继后尊荣版", text: "你深得敬重。虽无子嗣，新帝登基依旧尊你为母后皇太后，地位在其生母之上。你稳居后宫安享尊荣。" },
+                { title: "禅位归隐版", text: "主动请旨守陵，新帝赐予丰厚供养。你青灯古佛相伴，为先帝祈福，安然离世。" },
+                { title: "宫斗反噬版", text: "无子嗣且站错队伍。新帝登基被废黜皇后位贬为庶人，曾经的后宫之主落得凄惨下场。" }
+            ]
+        }
+    };
 
     window.onload = async function() {
         try {
@@ -89,7 +142,7 @@
             const text = new TextDecoder('utf-8').decode(buffer);
             parseCSV(text);
             document.getElementById('loading-overlay').classList.add('hidden');
-        } catch (err) { document.getElementById('load-status').innerText = "加载失败"; }
+        } catch (err) { document.getElementById('load-status').innerText = "资源加载失败，请刷新重试"; }
     };
 
     function parseCSV(text) {
@@ -123,25 +176,18 @@
 
     function generateIdentity() {
         const nameInput = document.getElementById('p-name').value;
-        if (!nameInput) return alert("请赐名");
+        if (!nameInput) return alert("请在名册上留下芳名");
         p.name = nameInput;
-
-        // 初始化皇帝：只显示当前，隐藏未来
         emperor.eraName = eraNames[Math.floor(Math.random() * eraNames.length)];
         emperor.currentYear = rnd(1, 20); 
         emperor.deathYear = rnd(30, 35); 
-
         const ranks = ["宫女", "答应", "贵人"];
         p.rank = ranks[Math.floor(Math.random() * 3)]; 
         const base = { "宫女":[20,40], "答应":[35,55], "贵人":[50,70] }[p.rank];
         p.stats = { beauty: rnd(base[0],base[1]), talent: rnd(base[0],base[1]), wit: rnd(base[0],base[1]), body: rnd(40,60), prestige: rnd(5,15), favor: p.rank === "宫女" ? 0 : rnd(1, 10) };
-        
         document.getElementById('page-start').classList.add('hidden');
         document.getElementById('page-identity').classList.remove('hidden');
-        
-        // 此处只介绍时代，绝不透露 deathYear
-        document.getElementById('era-intro').innerHTML = `当今圣上年号<b>【${emperor.eraName}】</b>，已在位<b>${emperor.currentYear}</b>载。<br>如今天下太平，正是选秀入宫的好时机。`;
-        
+        document.getElementById('era-intro').innerHTML = `当今圣上年号<b>【${emperor.eraName}】</b>，已在位<b>${emperor.currentYear}</b>载。`;
         document.getElementById('display-rank').innerText = `${p.name} · ${p.rank}`;
         document.getElementById('display-stats').innerHTML = `容貌：${p.stats.beauty} &nbsp; 才情：${p.stats.talent}<br>心机：${p.stats.wit} &nbsp; 体质：${p.stats.body}<br>声望：${p.stats.prestige} &nbsp; 圣宠：${p.stats.favor}`;
     }
@@ -160,62 +206,76 @@
     function toggleStats() { document.getElementById('stat-panel').classList.toggle('open'); }
 
     function updateStatPanel() {
-        let childrenText = `${p.children.male}男 ${p.children.female}女`;
-        let statusText = p.pregTimer >= 0 ? `<span style="color:#ffb700">怀有身孕</span>` : "常态";
-
-        // 这里的显示面板也只显示当前在位年份
+        let childrenText = `${p.children.male}皇子 ${p.children.female}公主`;
+        let statusText = p.pregTimer >= 0 ? `<span style="color:#ffb700">怀有龙裔</span>` : "平常";
         document.getElementById('stat-content').innerHTML = `
             <div class="stat-row">年号：${emperor.eraName} ${emperor.currentYear}年</div>
             <div class="stat-row">位份：${p.rank}</div>
             <div class="stat-row">子嗣：<span style="color:#c5a059">${childrenText}</span></div>
-            <div class="stat-row">状态：${statusText}</div>
             <div class="stat-row">入宫时间：第${p.year}年 季${p.quarter}</div>
+            <div class="stat-row">状态：${statusText}</div>
             <div class="stat-row">圣宠：<span style="color:#ff4d4d">${p.stats.favor}</span></div>
-            <div class="stat-row">声望：${p.stats.prestige}</div>
             <div class="stat-row">体质：${p.stats.body}</div>
         `;
     }
 
-    // 怀孕逻辑保持不变
-    function checkPregnancyProgress() {
-        if (p.pregTimer === -1) return;
-        p.pregTimer++;
-        if (p.pregTimer >= 3) { giveBirth(); }
-    }
-
     function handlePregnancy() {
-        if (p.pregTimer >= 0) { alert("【提示】你昨夜侍奉圣驾，皇上对你温存有加。"); return; }
+        if (p.pregTimer >= 0) return;
         let chance = p.stats.body > 70 ? 0.5 : 0.2;
         if (Math.random() < chance) {
             p.pregTimer = 0;
             alert("【喜讯】你昨夜侍奉圣驾。今日太医请脉，喜称你已怀有龙裔！");
         } else {
-            alert("【消息】你昨夜侍奉圣驾。虽未有身孕，但皇上对你甚是满意。");
+            alert("【消息】你昨夜侍奉圣驾，皇上待你极其恩厚。");
         }
         updateStatPanel();
     }
 
     function giveBirth() {
         let roll = Math.random();
-        let resultText = (roll < 0.05) ? (p.children.male++, p.children.female++, "竟然是一对龙凤双胞胎！") : 
-                         (roll < 0.5) ? (p.children.male++, "是一位健壮的皇子！") : 
-                         (p.children.female++, "是一位可爱的公主！");
-        alert(`【生产】经过十月怀胎，你终于分娩了。${resultText}`);
+        let resultText = "";
+        if (roll < 0.05) { p.children.male++; p.children.female++; resultText = "竟然是一对龙凤双胞胎！"; }
+        else if (roll < 0.5) { p.children.male++; resultText = "是一位健壮的皇子！"; }
+        else { p.children.female++; resultText = "是一位可爱的公主！"; }
+        alert(`【分娩】经过十月怀胎，你顺利诞下麟儿。${resultText}`);
         p.pregTimer = -1;
         updateStatPanel();
     }
 
-    function showPlot() {
-        checkPregnancyProgress();
+    // --- 结局判定核心函数 ---
+    function getDeathEnding() {
+        if (p.rank === "宫女") return { title: "重获自由", text: "皇上驾崩，你作为卑微宫女被遣散出宫，重获自由。" };
+        
+        let pool = ENDING_DB[p.rank] || ENDING_DB["答应"];
+        let outcomes = [];
 
-        // 秘密判定皇帝驾崩：玩家并不知道何时触发
+        if (p.children.male > 0) {
+            outcomes = pool.son; // 优先皇子路线
+        } else if (p.children.female > 0) {
+            // 特殊逻辑：如果是贵人且只有公主，触发和亲
+            if (p.rank === "贵人") outcomes = pool.daughter;
+            else outcomes = pool.none; // 低位嫔妃只有公主待遇等同于无子
+        } else {
+            outcomes = pool.none; // 无子
+        }
+        
+        // 容错处理
+        if(!outcomes || outcomes.length === 0) outcomes = pool.none;
+        return outcomes[Math.floor(Math.random() * outcomes.length)];
+    }
+
+    function showPlot() {
+        if (p.pregTimer >= 0) { p.pregTimer++; if (p.pregTimer >= 3) giveBirth(); }
+
+        // 皇帝驾崩判定
         if (emperor.currentYear >= emperor.deathYear) {
-            showEnding("国丧大行", `【${emperor.eraName} ${emperor.currentYear}年】<br>钟声长鸣，举国哀恸。圣上突然驾崩了。<br>作为后宫嫔妃，你被迫在感业寺出家，为先帝祈福。那深宫中的红墙绿瓦，终成过往云烟。`);
+            let ending = getDeathEnding();
+            showEnding(ending.title, `【${emperor.eraName} ${emperor.currentYear}年】<br>${ending.text}`);
             return;
         }
 
         if (p.rank === "宫女" && p.year >= 6) {
-            showEnding("出宫恩典", "入宫五载，你依旧只是个卑微的宫女。如今青春已逝，按例被放出宫去。");
+            showEnding("出宫恩典", "入宫五载，依旧只是个卑微的宫女。如今青春已逝，按例被放出宫去。");
             return;
         }
 
@@ -232,20 +292,14 @@
             let btn = document.createElement('button'); btn.className = "choice-btn"; btn.style.width = "100%"; btn.innerText = c.text;
             btn.onclick = () => {
                 let pass = true;
-                if(c.checkAttr && c.checkAttr !== "无") {
-                    const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
-                    if(p.stats[attrKeyMap[c.checkAttr] || c.checkAttr] < c.checkVal) pass = false;
-                }
-                
+                const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
+                if(c.checkAttr && c.checkAttr !== "无" && p.stats[attrKeyMap[c.checkAttr] || c.checkAttr] < c.checkVal) pass = false;
                 if(pass) {
-                    for(let k in c.stats) p.stats[k] += (c.stats[k] || 0);
+                    for(let k in c.stats) if(p.stats[k] !== undefined) p.stats[k] += (c.stats[k] || 0);
                     if (s.isBed === "1") handlePregnancy();
                     if (c.newRank === "结局") { showEnding("尘埃落定", c.resOk); return; }
                     if(c.newRank && c.newRank !== "") p.rank = c.newRank;
-                    
-                    p.quarter++; 
-                    if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
-                    
+                    p.quarter++; if(p.quarter > 4){ p.quarter = 1; p.year++; emperor.currentYear++; }
                     updateStatPanel();
                     document.getElementById('story-text').innerHTML = `<div class="message">${c.resOk}</div>`;
                     area.innerHTML = `<button class="choice-btn" style="width:100%" onclick="showPlot()">继续</button>`;
@@ -268,15 +322,9 @@
 
     function gameOver(res) {
         document.getElementById('page-game').innerHTML = `
-            <div class="dead-card">
-                <h2 style="letter-spacing: 5px;">魂断深宫</h2>
-                <div style="line-height:1.8; margin:20px 0;">${res}</div>
-                <button class="choice-btn" style="width:100%; margin-top:20px; background:#400; color:#fff; border:none;" onclick="location.reload()">重新开始</button>
-            </div>`;
+            <div class="dead-card"><h2>魂断深宫</h2><div style="margin:20px 0;">${res}</div><button class="choice-btn" style="width:100%; background:#400; color:#fff;" onclick="location.reload()">重新开始</button></div>`;
     }
-    function resistDecree() {
-        document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊，满门抄斩！</div><button class="choice-btn" onclick="location.reload()">叩首谢罪</button></div>`;
-    }
+    function resistDecree() { document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊，满门抄斩！</div><button class="choice-btn" onclick="location.reload()">重新开始</button></div>`; }
 </script>
 </body>
 </html>
