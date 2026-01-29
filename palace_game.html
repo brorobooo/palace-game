@@ -8,6 +8,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 :root {
     font-size: 16px;
     --palace-red: #8b1b1b;
@@ -29,16 +35,16 @@ body {
     justify-content: center;
     align-items: center;
     height: 100dvh;
-    width: 100vw;
-    overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
 }
 
 #game-container {
-    width: 100%;
+    width: 100vw;
     max-width: 500px;
+    margin: 0 auto;
+    overflow: hidden;
     height: 100%;
     background: var(--paper) url("https://www.transparenttextures.com/patterns/paper-fibers.png");
     border: 0.4rem solid var(--palace-red);
@@ -131,21 +137,21 @@ input[type="text"] {
 .choice-btn:active {
     transform: scale(0.97);
 }
-    /* 修改后的卷轴样式 */
-#stat-panel { 
-    position: absolute;
-    right: 0;
+#stat-panel {
+    position: fixed;
     top: 0;
-    width: 85%;
-    height: 100%;
-    transform: translateX(110%);
-    transition: transform 0.4s ease;
+    right: 0;
+    width: 85vw;
+    max-width: 420px;
+    height: 100vh;
+    transform: translateX(100%);
+    transition: transform 0.35s ease;
     z-index: 1000;
 }
-
 #stat-panel.open {
     transform: translateX(0);
 }
+
 
 #stat-panel h3 { color: var(--gold); margin: 0 0 15px 0; border-bottom: 1px solid var(--gold); padding-bottom: 5px; }
 #stat-panel h4 { color: var(--gold); margin: 10px 0 5px 0; font-size: 0.95rem; }
@@ -726,6 +732,7 @@ function gameOver(res) {
 </script>
 </body>
 </html>
+
 
 
 
