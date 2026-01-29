@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>深宫华章：凤权弈</title>
+<title>深宫华章：凤权弈爱</title>
 
 <!-- ✅ 关键：移动端适配 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -195,6 +195,15 @@ input[type="text"] {
     justify-content: space-between;
     gap: 10px; 
     margin: 5px 0;
+}
+.end-card {
+    margin: auto;
+    padding: 30px 20px;
+    background: #fffafa;
+    border: 4px double var(--palace-red);
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    text-align: center;
+    max-width: 90%;
 }
 .volume-ctrl label { font-size: 0.85rem; color: #bbb; white-space: nowrap; width: 50px; }
 .volume-ctrl input[type="range"] { 
@@ -573,7 +582,12 @@ async function loadGame() {
                 
                 let resultText = pass ? c.sText : c.fText;
                 let effectStatus = applyEffect(pass ? c.sEff : c.fEff);
-                if(effectStatus === "DEAD") return;
+
+if (effectStatus && effectStatus.isDead) {
+    gameOver(effectStatus.reason);
+    return;
+}
+
 
                 if (pass && s.isBed === "1") handlePregnancy();
 
@@ -634,6 +648,7 @@ function gameOver(res) {
 </script>
 </body>
 </html>
+
 
 
 
