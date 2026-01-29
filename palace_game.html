@@ -146,8 +146,10 @@ input[type="text"] {
     height: 100vh;
     transform: translateX(100%);
     transition: transform 0.35s ease;
+    background: rgba(30, 30, 30, 0.98); color: #ddd;
     z-index: 1000;
 }
+ 
 #stat-panel.open {
     transform: translateX(0);
 }
@@ -267,6 +269,55 @@ input[type="text"] {
     from { transform: scale(0.9); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+.popup-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.popup-mask.hidden {
+    display: none;
+}
+
+.game-popup {
+    width: 85%;
+    max-width: 360px;
+    background: #fff7f2;
+    border: 2px solid #8b1e1e;
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
+.popup-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #8b1e1e;
+    margin-bottom: 10px;
+}
+
+.popup-content {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.popup-btn {
+    width: 100%;
+    padding: 10px 0;
+    background: #8b1e1e;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
 
 </style>
 </head>
@@ -335,6 +386,15 @@ input[type="text"] {
         <button class="choice-btn popup-btn" onclick="closePopup()">谨遵圣意</button>
     </div>
 </div>
+<!-- 游戏内弹窗：生子 / 事件提醒 -->
+<div id="game-popup-mask" class="popup-mask hidden">
+  <div class="game-popup">
+    <div class="popup-title" id="popup-title">喜讯</div>
+    <div class="popup-content" id="popup-content"></div>
+    <button class="popup-btn" onclick="closeGamePopup()">谨遵圣意</button>
+  </div>
+</div>
+
 
 
 <script>
@@ -732,6 +792,7 @@ function gameOver(res) {
 </script>
 </body>
 </html>
+
 
 
 
