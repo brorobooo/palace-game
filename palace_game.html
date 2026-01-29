@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>深宫华章：凤权弈❥</title>
+<title>深宫华章：凤权弈</title>
 
 <!-- ✅ 关键：移动端适配 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -365,13 +365,15 @@ input[type="text"] {
     }
 
     // --- 万能属性解析逻辑 ---
-    function applyEffect(effectStr, failText) { // 增加 failText 参数
+    function applyEffect(effectStr, failMsg) {
     if (!effectStr || effectStr === "无") return null;
-    // 如果是直接死亡剧情
+
+    // 1. 处理直接死亡剧情
     if (effectStr.includes("死亡")) {
-        return { isDead: true, reason: failText || "深宫诡谲难测，一朝命陨红墙，徒留一声叹息。" };
+        return { isDead: true, reason: failMsg || "一朝走错，满盘皆输。" };
     }
-    const attrMap = {"容貌":"beauty", "心机":"wit", "体情":"talent", "体质":"body", "声望":"prestige", "圣宠":"favor"};
+
+    const attrMap = {"容貌":"beauty", "心机":"wit", "才情":"talent", "体质":"body", "声望":"prestige", "圣宠":"favor"};
     effectStr.split(';').forEach(change => {
         let match = change.match(/([\u4e00-\u9fa5]+)([+-]\d+)/);
         if (match) {
@@ -379,13 +381,16 @@ input[type="text"] {
             if (attrName) p.stats[attrName] += parseInt(match[2]);
         }
     });
-    // 检查体质是否耗尽
+
+    // 2. 处理体质归零死亡
     if (p.stats.body <= 0) {
         p.stats.body = 0;
+        updateStatPanel();
         return { isDead: true, reason: "你长年累月身处深宫，终究是耗尽了心力，撒手人寰。" };
     }
+
     updateStatPanel();
-    return null;
+    return null; // 没死返回null
 }
 
     function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -603,9 +608,25 @@ function showEnding(title, msg) {
         document.getElementById('page-game').innerHTML = `<div class="end-card"><h2 style="color:var(--palace-red);">${title}</h2><div style="line-height:1.8; margin:20px 0;">${msg}</div><button class="choice-btn" onclick="location.reload()">再入轮回</button></div>`;
     }
 
-    function gameOver(res) {
-        document.getElementById('page-game').innerHTML = `<div class="dead-card"><h2>魂断深宫</h2><div style="margin:20px 0;">${res}</div><button class="choice-btn" style="background:#400; color:#fff;" onclick="location.reload()">重新开始</button></div>`;
-    }
+function gameOver(res) {
+    if (typeof switchBGM === "function") switchBGM('start'); 
+    
+    // 隐藏灯笼和侧边栏防止穿帮
+    const trigger = document.getElementById('menu-trigger');
+    if(trigger) trigger.classList.add('hidden');
+    document.getElementById('stat-panel').classList.remove('open');
+
+    // 强制黑底红字全屏覆盖
+    document.getElementById('page-game').innerHTML = `
+        <div style="background:#000; color:#b00; height:100%; width:100%; position:absolute; top:0; left:0; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; text-align:center; box-sizing:border-box; z-index:9999;">
+            <h1 style="font-size:3rem; letter-spacing:15px; margin-bottom:10px; border-bottom:2px solid #b00; color:#b00;">香消玉殒</h1>
+            <p style="color:#555; font-size:0.9rem; margin-bottom:30px;">—— 此生缘尽，来世莫入帝王家 ——</p>
+            <div style="font-size:1.2rem; line-height:1.8; color:#ccc; margin-bottom:40px; border:1px double #400; padding:20px;">
+                ${res}
+            </div>
+            <button class="choice-btn" style="background:#300; color:#b00; border:1px solid #b00; width:200px;" onclick="location.reload()">再入轮回</button>
+        </div>`;
+}
 
     function resistDecree() { 
         document.getElementById('identity-content').innerHTML = `<div class="dead-card"><h2>雷霆之怒</h2><div style="margin:20px 0;">抗旨不尊是大罪，你被赐下一尺白绫，家中满门亦受牵连。</div><button class="choice-btn" onclick="location.reload()">重新开始</button></div>`; 
@@ -613,6 +634,7 @@ function showEnding(title, msg) {
 </script>
 </body>
 </html>
+
 
 
 
