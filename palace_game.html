@@ -394,7 +394,8 @@ input[type="text"] {
     <button class="popup-btn" onclick="closeGamePopup()">谨遵圣意</button>
   </div>
 </div>
-
+<audio id="bgm-player" loop></audio>
+<audio id="se-player"></audio>
 
 
 <script>
@@ -521,6 +522,8 @@ input[type="text"] {
     function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function generateIdentity() {
+        playClick(); // 音效
+    switchBGM('start'); // 启动初始音乐
         const nameInput = document.getElementById('p-name').value;
         if (!nameInput) return alert("请在名册上留下芳名");
         p.name = nameInput;
@@ -541,6 +544,8 @@ input[type="text"] {
 
     // 修改 2: 入宫函数（确保灯笼现身）
 async function enterPalace() {
+    playClick();
+    switchBGM('game'); // 切换到游戏音乐
     await loadRankStory(p.rank);
     document.getElementById('page-identity').classList.add('hidden');
     document.getElementById('page-game').classList.remove('hidden');
@@ -710,6 +715,7 @@ async function loadGame() {
             if(!c.text) return;
             let btn = document.createElement('button'); btn.className = "choice-btn"; btn.innerText = c.text;
             btn.onclick = async () => {
+                playClick(); // 在逻辑最前面添加
                 const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
                 let pass = (c.attr === "无" || p.stats[attrKeyMap[c.attr]] >= c.val);
                 let resultText = pass ? c.sText : c.fText;
@@ -761,12 +767,52 @@ if (effectStatus && effectStatus.isDead) {
             area.appendChild(btn);
         });
     }
+    // --- 音频配置 ---
+const BGM_START = BASE_URL + 'bgm_start.mp3';
+const BGM_GAME = [BASE_URL + 'bgm_game1.mp3', BASE_URL + 'bgm_game2.mp3'];
+let currentGameBgmIdx = 0;
+
+const bgmPlayer = document.getElementById('bgm-player');
+const sePlayer = document.getElementById('se-player');
+
+// 播放点击音效
+function playClick() {
+    sePlayer.src = BASE_URL + 'se_click.mp3';
+    sePlayer.volume = document.getElementById('se-vol').value;
+    sePlayer.play();
+}
+
+// 切换背景音乐
+function switchBGM(type) {
+    if (type === 'start') {
+        bgmPlayer.src = BGM_START;
+    } else if (type === 'game') {
+        // 实现两首音乐循环切换
+        bgmPlayer.src = BGM_GAME[currentGameBgmIdx];
+        bgmPlayer.onended = () => {
+            currentGameBgmIdx = (currentGameBgmIdx + 1) % BGM_GAME.length;
+            switchBGM('game');
+        };
+        // 注意：游戏内音乐我们关闭标签自带的 loop，改用上面的 onended 手动切换
+        bgmPlayer.loop = false;
+    }
+    
+    bgmPlayer.volume = document.getElementById('bgm-vol').value;
+    bgmPlayer.play().catch(e => console.log("等待用户交互后播放音频"));
+}
+
+// 实时调节音量
+function adjustVolume() {
+    bgmPlayer.volume = document.getElementById('bgm-vol').value;
+    sePlayer.volume = document.getElementById('se-vol').value;
+}
 
 function showEnding(title, msg) {
         document.getElementById('page-game').innerHTML = `<div class="end-card"><h2 style="color:var(--palace-red);">${title}</h2><div style="line-height:1.8; margin:20px 0;">${msg}</div><button class="choice-btn" onclick="location.reload()">再入轮回</button></div>`;
     }
 
 function gameOver(res) {
+    switchBGM('start'); // 切换回悲伤/肃穆的初始音乐
     if (typeof switchBGM === "function") switchBGM('start'); 
     
     // 隐藏灯笼和侧边栏防止穿帮
@@ -792,6 +838,7 @@ function gameOver(res) {
 </script>
 </body>
 </html>
+
 
 
 
