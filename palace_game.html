@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>深宫华章：凤权弈爱</title>
+<title>深宫华章：凤权弈</title>
 
 <!-- ✅ 关键：移动端适配 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -354,6 +354,8 @@ input[type="text"] {
     let currentPool = [];
     let usedPlotIds = new Set(); 
     let lastWasDeadly = false; // 死局冷却控制
+    let pendingDeathReason = null; // 用于延迟死亡结算
+
 
     // --- 结局数据库 ---
    const ENDING_DB = {
@@ -649,14 +651,14 @@ async function loadGame() {
             btn.onclick = async () => {
                 const attrKeyMap = {"容貌":"beauty","才情":"talent","心机":"wit","体质":"body","声望":"prestige","圣宠":"favor"};
                 let pass = (c.attr === "无" || p.stats[attrKeyMap[c.attr]] >= c.val);
-                
                 let resultText = pass ? c.sText : c.fText;
-                let effectStatus = applyEffect(pass ? c.sEff : c.fEff);
+let effectStatus = applyEffect(pass ? c.sEff : c.fEff);
 
+// 如果触发死亡，不立刻结局，先记下来
 if (effectStatus && effectStatus.isDead) {
-    gameOver(effectStatus.reason);
-    return;
+    pendingDeathReason = effectStatus.reason;
 }
+
 
 
                 if (pass && s.isBed === "1") handlePregnancy();
@@ -682,7 +684,18 @@ if (effectStatus && effectStatus.isDead) {
 
                 updateStatPanel();
                 document.getElementById('story-text').innerHTML = `<div class="message">${resultText}${promotionMsg}</div>`;
-                area.innerHTML = `<button class="choice-btn" onclick="showPlot()">继续</button>`;
+                area.innerHTML = `
+<button class="choice-btn" onclick="
+    if (pendingDeathReason) {
+        const reason = pendingDeathReason;
+        pendingDeathReason = null;
+        gameOver(reason);
+    } else {
+        showPlot();
+    }
+">继续</button>
+`;
+
             };
             area.appendChild(btn);
         });
@@ -718,6 +731,7 @@ function gameOver(res) {
 </script>
 </body>
 </html>
+
 
 
 
