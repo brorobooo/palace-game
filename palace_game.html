@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>深宫华章：凤权弈</title>
+<title>深宫华章：凤权弈爱</title>
 
 <!-- ✅ 关键：移动端适配 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -132,28 +132,23 @@ input[type="text"] {
     transform: scale(0.97);
 }
     /* 修改后的卷轴样式 */
-/* 修改卷轴：默认完全躲在右侧屏幕外 */
 #stat-panel { 
-    position: absolute; 
-    right: -110%; 
-    top: 0; 
-    width: 85%; 
-    height: 100%; 
-    background: rgba(20, 20, 20, 0.95); /* 更深沉的底色 */
-    color: #ddd; 
-    transition: right 0.4s ease; 
-    z-index: 1000; 
-    padding: 20px 15px; /* 缩小内边距 */
-    box-sizing: border-box; 
-    border-left: 2px solid var(--gold); 
-    overflow-y: auto;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 85%;
+    height: 100%;
+    transform: translateX(110%);
+    transition: transform 0.4s ease;
+    z-index: 1000;
 }
+
+#stat-panel.open {
+    transform: translateX(0);
+}
+
 #stat-panel h3 { color: var(--gold); margin: 0 0 15px 0; border-bottom: 1px solid var(--gold); padding-bottom: 5px; }
 #stat-panel h4 { color: var(--gold); margin: 10px 0 5px 0; font-size: 0.95rem; }
-/* 展开状态 */
-#stat-panel.open { 
-    right: 0; 
-}
 
 /* 修正小灯笼样式：确保它在层级最上方 */
 #menu-trigger { 
@@ -731,6 +726,7 @@ function gameOver(res) {
 </script>
 </body>
 </html>
+
 
 
 
